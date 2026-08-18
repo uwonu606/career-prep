@@ -1,0 +1,6 @@
+# 개인 데이터. 이 저장소에는 절대 들어오지 않는다.
+career/
+
+__pycache__/
+*.pyc
+.DS_Store
