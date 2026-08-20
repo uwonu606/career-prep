@@ -35,19 +35,21 @@ def authors(repo):
 
 
 def commits(repo, mail):
-    """커밋마다 (epoch, 날짜, 시각, 변경파일집합, 추가, 삭제, 신규수). 메시지는 읽지 않는다."""
-    args = ["log", "--no-merges", "--reverse", f"--format={HEAD}%at{SEP}%ad", "--date=format:%Y-%m-%d%H:%M",
-            "--name-status"]
-    if mail:
-        args += [f"--author={mail}"]
-    out = git(repo, *args)
+    """커밋마다 (epoch, 날짜, 시각, 변경파일집합, 신규수). 메시지는 읽지 않는다.
+
+    author 는 git 의 --author 로 거르지 않는다. 그것은 앵커 없는 정규식이라
+    남의 주소를 부분일치로 함께 집어온다 (me@x.com 이 notme@x.com 을 문다).
+    %ae 를 받아 파이썬에서 정확히 비교한다.
+    """
+    out = git(repo, "log", "--no-merges", "--reverse", f"--format={HEAD}%at{SEP}%ad{SEP}%ae",
+              "--date=format:%Y-%m-%d%H:%M", "--name-status")
     rows, cur = [], None
     for line in out.splitlines():
         if line.startswith(HEAD):
             if cur:
                 rows.append(cur)
-            at, ad = line[len(HEAD):].split(SEP)
-            cur = {"at": int(at), "date": ad[:10], "time": ad[10:], "files": set(), "new": 0}
+            at, ad, ae = line[len(HEAD):].split(SEP, 2)  # 주소가 마지막이라 남는 건 다 주소다
+            cur = {"at": int(at), "date": ad[:10], "time": ad[10:], "mail": ae, "files": set(), "new": 0}
         elif line.strip() and cur is not None:
             parts = line.split("\t")
             if len(parts) >= 2:
@@ -56,6 +58,12 @@ def commits(repo, mail):
                     cur["new"] += 1
     if cur:
         rows.append(cur)
+    if mail:
+        rows = [r for r in rows if r["mail"] == mail]
+    # author 시각은 커밋 순서와 어긋날 수 있다 (리베이스·cherry-pick·--amend --date).
+    # 묶기도 기간도 시간순을 전제하므로 여기서 한 번 세운다.
+    # 안정 정렬이라 같은 시각끼리는 --reverse 가 준 순서를 그대로 지킨다.
+    rows.sort(key=lambda r: r["at"])
     return rows
 
 
@@ -72,9 +80,21 @@ def cluster(rows):
             g["files"] |= c["files"]
             g["new"] += c["new"]
         else:
-            out.append({"date": c["date"], "start": c["time"], "end": c["time"], "at_end": c["at"],
+            out.append({"date": c["date"], "start": c["time"], "end": c["time"],
+                        "at_start": c["at"], "at_end": c["at"],
                         "n": 1, "files": set(c["files"]), "new": c["new"]})
     return out
+
+
+def number_by_day(gs):
+    """같은 날 안에서 몇 번째 묶음인지 각 묶음에 적어 둔다.
+
+    시각 문자열로 자리를 찾으면 같은 분에 시작한 묶음 둘이 같은 번호를 받는다.
+    """
+    for date in {g["date"] for g in gs}:
+        same = sorted([g for g in gs if g["date"] == date], key=lambda g: g["at_start"])
+        for i, g in enumerate(same, 1):
+            g["idx"], g["of"] = i, len(same)
 
 
 def main():
@@ -95,13 +115,14 @@ def main():
     if not rows:
         print("\n해당 author 의 커밋이 없다"); return
     gs = cluster(rows)
-    gs_by_day = collections.Counter(g["date"] for g in gs)
+    number_by_day(gs)
+    dates = [r["date"] for r in rows]
 
-    print(f"\n== 재료 ==  커밋 {len(rows)}  기간 {rows[0]['date']} ~ {rows[-1]['date']}  묶음 {len(gs)}")
+    print(f"\n== 재료 ==  커밋 {len(rows)}  기간 {min(dates)} ~ {max(dates)}  묶음 {len(gs)}")
     print("날짜        시각          커밋  묶음  파일  신규")
     for g in sorted(gs, key=lambda g: -g["n"])[:12]:
         span = g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
-        idx = f"{sorted([x['start'] for x in gs if x['date']==g['date']]).index(g['start'])+1}/{gs_by_day[g['date']]}"
+        idx = f"{g['idx']}/{g['of']}"
         print(f"{g['date']}  {span:<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
     print("\n파일 경로·커밋 메시지는 재료가 아니다. 이 출력에 없는 것은 묻지 않는다.")
 
