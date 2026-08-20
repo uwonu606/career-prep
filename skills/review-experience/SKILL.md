@@ -60,6 +60,6 @@ disable-model-invocation: true
 
 인터뷰 중에 자기 서술이 나왔으면 `career/self.md`에 `상태: 후보`로 적는다. 되캔 내용이 기존 역량 주장과 어긋나면 그 주장의 `반례`에 이 에피소드 id를 넣는다.
 
-`add-experience` 스킬의 `scripts/build_index.py`에 닿을 수 있으면 돌린다 — **`vocabulary.md` 경로를 함께 넘긴다.** 닿을 수 없으면 그대로 둔다. `index.md`는 파생 캐시라 다음 `add-experience` 실행 때 다시 만들어진다.
+`add-experience` 스킬의 `scripts/build_index.py`에 닿을 수 있으면 돌린다. 닿을 수 없으면 그대로 둔다. `index.md`는 파생 캐시라 다음 `add-experience` 실행 때 다시 만들어진다.
 
 **완료 조건:** 사용자가 추가된 부분을 확인했고, 파일이 갱신됐고, 남은 `open_questions`를 사용자가 안다.
