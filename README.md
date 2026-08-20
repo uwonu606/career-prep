@@ -47,7 +47,7 @@ career/
 | | |
 |---|---|
 | `skills/add-experience/` | 캐내고 기록한다 |
-| `└ references/frames.md` | 칸별 질문 18개(바닥), 도달 판정, 특수 상황 넷 |
+| `└ references/frames.md` | 칸별 질문 18개(바닥), 도달 판정, 특수 상황 셋 |
 | `└ references/schema.md` | 파일 레이아웃과 frontmatter |
 | `└ references/vocabulary.md` | 역량 태그와 여는 질문 (같은 표에서 나온다) |
 | `└ scripts/build_index.py` | `index.md` 재생성 |
