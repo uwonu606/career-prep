@@ -47,7 +47,7 @@ career/
 | | |
 |---|---|
 | `skills/add-experience/` | 캐내고 기록한다 |
-| `└ references/frames.md` | 칸별 질문 18개(바닥), 도달 판정, 특수 상황 넷 |
+| `└ references/frames.md` | 칸별 질문 18개(바닥), 도달 판정, 특수 상황 셋 |
 | `└ references/schema.md` | 파일 레이아웃과 frontmatter |
 | `└ references/vocabulary.md` | 역량 태그와 여는 질문 (같은 표에서 나온다) |
 | `└ scripts/build_index.py` | `index.md` 재생성 |
@@ -72,7 +72,7 @@ Claude Code에서는 플러그인으로 설치하면 `agents/tech-interviewer.md
 ## 아직 없는 것
 
 - `applications/` — JD와 저장소를 대조한 **격차 서술**. 맞고 틀림을 판정하지 않고 근거가 없는 항목을 나열한다
-- 인사담당자(5~10초 예산)·임원(컬처핏) 페르소나
+- 인사담당자(5~10초 예산)·임원(컬처핏) 페르소나 — 다만 기술면접관이 프로젝트 밖 에피소드(알바 갈등·혼자 공부)에도 그대로 작동하는 것이 측정됐다. 급하지 않다
 - 자소서·포트폴리오 양식 제안
 - 여는 질문을 직무별로 생성하는 앵커 생성기
 
