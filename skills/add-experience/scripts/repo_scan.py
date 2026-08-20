@@ -8,7 +8,9 @@
 
 표준 라이브러리만 쓴다.
 """
-import subprocess, sys, collections
+import collections
+import subprocess
+import sys
 
 SEP = "|@|"          # \x1e 는 str.splitlines() 가 줄바꿈으로 취급해서 못 쓴다
 HEAD = "@@CMT@@"
@@ -98,10 +100,14 @@ def number_by_day(gs):
 
 
 def main():
+    if len(sys.argv) < 2:
+        print("쓰임: python3 repo_scan.py <저장소 절대경로> [author 이메일]")
+        return 1
     repo = sys.argv[1]
     mail = sys.argv[2] if len(sys.argv) > 2 else None
     if not git(repo, "rev-parse", "--is-inside-work-tree").strip():
-        print("저장소가 아니거나 읽을 수 없다"); return
+        print("저장소가 아니거나 읽을 수 없다")
+        return 1
 
     al = authors(repo)
     print("== author ==")
@@ -109,11 +115,12 @@ def main():
         print(f"{mailx}  커밋 {n}  (이름 표기 {len(names)}종)")
     if len(al) > 1 and not mail:
         print("\nauthor 가 여럿이다. 어느 것이 사용자인지 물어본 뒤 그 이메일로 다시 돌린다.")
-        return
+        return 0
 
     rows = commits(repo, mail or (al[0][0] if al else None))
     if not rows:
-        print("\n해당 author 의 커밋이 없다"); return
+        print("\n해당 author 의 커밋이 없다")
+        return 0
     gs = cluster(rows)
     number_by_day(gs)
     dates = [r["date"] for r in rows]
@@ -125,6 +132,8 @@ def main():
         idx = f"{g['idx']}/{g['of']}"
         print(f"{g['date']}  {span:<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
     print("\n파일 경로·커밋 메시지는 재료가 아니다. 이 출력에 없는 것은 묻지 않는다.")
+    return 0
 
 
-main()
+if __name__ == "__main__":
+    sys.exit(main())

@@ -203,5 +203,33 @@ class 같은_날이_두_번_끊겨도_묶음번호가_겹치지_않는다(RepoCa
         self.assertIn("기간 2026-07-01 ~ 2026-07-02", self.out)
 
 
+class 잘못_부르면_트레이스백_대신_쓰임을_낸다(RepoCase):
+    def _run(self, *args):
+        done = subprocess.run([sys.executable, SCRIPT, *args], capture_output=True, text=True)
+        return done
+
+    def test_인자가_없으면_쓰임과_1_을_낸다(self):
+        r = self._run()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("쓰임:", r.stdout)
+        self.assertNotIn("Traceback", r.stderr)
+
+    def test_저장소가_아니면_1_을_낸다(self):
+        r = self._run(tempfile.gettempdir())
+        self.assertEqual(r.returncode, 1)
+
+    def test_정상_저장소는_0_을_낸다(self):
+        commit(self.repo, "2026-04-01T10:00:00", "solo@ex.com", "a", "m")
+        self.assertEqual(self._run(self.repo).returncode, 0)
+
+    def test_import_해도_실행되지_않는다(self):
+        # __main__ 가드가 있어야 테스트가 함수를 직접 부를 수 있다
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("rs_probe", SCRIPT)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.assertTrue(callable(mod.commits))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
