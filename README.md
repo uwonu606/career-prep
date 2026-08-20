@@ -51,6 +51,7 @@ career/
 | `└ references/schema.md` | 파일 레이아웃과 frontmatter |
 | `└ references/vocabulary.md` | 역량 태그와 여는 질문 (같은 표에서 나온다) |
 | `└ scripts/build_index.py` | `index.md` 재생성 |
+| `└ scripts/repo_scan.py` | 저장소에서 인출 재료만 뽑는다 — 시각·개수·이름 없는 묶음 |
 | `skills/review-experience/` | 검증하고 되캔다 |
 | `└ references/interviewer.md` | 면접관 판정 기준과 반환 형식 |
 | `docs/rationale.md` | 설계 근거 — 뒤집기 전에 읽을 것 |
