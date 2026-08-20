@@ -38,7 +38,7 @@ disable-model-invocation: true
 
 시간·장소·순서·사물은 질문의 **재료이지 각도가 아니다.** 고른 각도 안에서 재료로 쓰고, 답의 방향은 비운다 — 재료만 쓰고 각도를 비우면 채굴로 되돌아간다. 그리고 **과거를 겨눈다** — *"지금 다시 한다면"*은 현재 지식을 과거 칸으로 흘려보낸다. 그런 답이 나오면 `배운 점`에 넣는다.
 
-3회 미도달이면 `open_questions`에 적고 다음 `probe`로 간다. 채굴에서 센 횟수와 따로 센다.
+3회 미도달이면 `open_questions`에 적고 다음 `probe`로 간다.
 
 **`probe` 원문은 4단계에서 공개한다.** 지금 사용자가 알아야 할 것은 장면이지 면접관의 판단이 아니다 — 무엇을 답해야 하는지 알면 기억이 그쪽으로 재구성된다.
 
@@ -60,6 +60,6 @@ disable-model-invocation: true
 
 인터뷰 중에 자기 서술이 나왔으면 `career/self.md`에 `상태: 후보`로 적는다. 되캔 내용이 기존 역량 주장과 어긋나면 그 주장의 `반례`에 이 에피소드 id를 넣는다.
 
-`add-experience` 스킬의 `scripts/build_index.py`에 닿을 수 있으면 돌린다 — **`vocabulary.md` 경로를 함께 넘긴다.** 닿을 수 없으면 그대로 둔다. `index.md`는 파생 캐시라 다음 `add-experience` 실행 때 다시 만들어진다.
+`add-experience` 스킬의 `scripts/build_index.py`에 닿을 수 있으면 돌린다. 닿을 수 없으면 그대로 둔다. `index.md`는 파생 캐시라 다음 `add-experience` 실행 때 다시 만들어진다.
 
 **완료 조건:** 사용자가 추가된 부분을 확인했고, 파일이 갱신됐고, 남은 `open_questions`를 사용자가 안다.
