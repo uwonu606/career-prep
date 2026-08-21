@@ -15,10 +15,28 @@ from pathlib import Path
 BAR = " · "
 
 
+def strip_comment(v):
+    """따옴표 밖에서 공백 뒤에 오는 # 부터 줄 끝까지를 주석으로 본다 (YAML 규칙).
+
+    URL 앵커(.../42#c1)는 앞에 공백이 없어 걸리지 않고, 따옴표 안의 #도 살아남는다.
+    """
+    quote = ""
+    for i, ch in enumerate(v):
+        if quote:
+            if ch == quote:
+                quote = ""
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "#" and (i == 0 or v[i - 1] in " \t"):
+            return v[:i].rstrip()
+    return v
+
+
 def parse_frontmatter(text):
     """--- 로 감싼 앞부분을 아주 작은 YAML 부분집합으로 읽는다.
 
-    지원: key: value / key: [a, b] / key: 다음 줄부터 "- item" / 한 단계 중첩 맵.
+    지원: key: value / key: [a, b] / key: 다음 줄부터 "- item" (여러 줄 이어짐 포함)
+    / 한 단계 중첩 맵 / 블록 스칼라(| >) / 값 뒤의 인라인 주석.
     """
     if not text.startswith("---"):
         return {}
@@ -26,7 +44,11 @@ def parse_frontmatter(text):
     if end == -1:
         return {}
     data, key, nested = {}, None, None
-    for raw in text[3:end].splitlines():
+    lines = text[3:end].splitlines()
+    i = 0
+    while i < len(lines):
+        raw = lines[i]
+        i += 1
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
         indent = len(raw) - len(raw.lstrip())
@@ -39,16 +61,37 @@ def parse_frontmatter(text):
             nested = None
             continue
 
+        # 목록 항목이 여러 줄로 이어진다. schema.md 가 park한 칸에 요구하는 형태다 —
+        # 여기서 안 받으면 콜론이 든 이어짐 줄이 가짜 최상위 키가 된다.
+        if indent and nested is None and isinstance(data.get(key), list) and data[key]:
+            data[key][-1] += " " + line
+            continue
+
         if ":" not in line:
             continue
         k, _, v = line.partition(":")
-        k, v = k.strip(), v.strip()
+        k, v = k.strip(), strip_comment(v.strip())
 
         if indent and nested is not None:
             data[nested][k] = clean(v)
             continue
 
         nested = None
+        if v in ("|", ">", "|-", ">-", "|+", ">+"):
+            # 블록 스칼라. 더 들여쓴 줄을 모아 | 는 개행으로, > 는 공백으로 잇는다.
+            body, base = [], None
+            while i < len(lines):
+                nxt = lines[i]
+                if nxt.strip() and len(nxt) - len(nxt.lstrip()) <= indent:
+                    break
+                if nxt.strip() and base is None:
+                    base = len(nxt) - len(nxt.lstrip())
+                body.append(nxt[base:].rstrip() if nxt.strip() else "")
+                i += 1
+            joined = "\n".join(body) if v[0] == "|" else " ".join(x for x in body if x)
+            data[k] = joined.strip()
+            key = None
+            continue
         if v == "":
             data[k] = {}
             nested = k
