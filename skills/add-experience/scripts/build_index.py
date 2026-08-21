@@ -6,7 +6,7 @@
 
     python3 build_index.py <career_dir> [vocabulary.md 경로]
 
-표준 라이브러리만 쓴다.
+Python 3.9+ · 표준 라이브러리만 쓴다.
 """
 
 import sys
