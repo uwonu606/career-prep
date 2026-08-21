@@ -17,13 +17,13 @@ import os
 import shutil
 import subprocess
 import sys
+import re
 import tempfile
 import unittest
-from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "build_index.py")
-REAL_VOCAB = Path(HERE).parent / "references" / "vocabulary.md"
+SCHEMA = os.path.join(os.path.dirname(HERE), "references", "schema.md")
 
 _spec = importlib.util.spec_from_file_location("build_index_under_test", SCRIPT)
 bi = importlib.util.module_from_spec(_spec)
@@ -37,6 +37,7 @@ VOCABULARY = """# 앵커와 어휘
 | --- | --- |
 | 디버깅 | "원인을 못 찾아서 오래 붙잡고 있었던 에러가 있었나요?" |
 | 갈등 | "팀에서 의견이 갈렸던 적이 있었나요?" |
+| 디버깅 | "같은 태그를 두 번 적어도 한 줄에 한 번만 나와야 한다" |
 
 ## 기술 주제
 
@@ -46,23 +47,21 @@ VOCABULARY = """# 앵커와 어휘
 | 성능 | |
 """
 
-# schema.md 의 에피소드 템플릿 문면 그대로 — 인라인 주석 포함
-SCHEMA_EPISODE = """---
-id: concurrent-payment-lock
-title: 동시 결제로 재고가 음수가 된 버그
-projects: [secondhand-market]      # 0개(프로젝트 밖) · 1개 · 2개 이상(걸친 사건) 모두 정상
-related: []                        # 이어지는 다른 에피소드 id
-date: 2025-04
-skills: [동시성, 디버깅]            # references/vocabulary.md 의 어휘
-evidence: verified                 # verified | recalled | unacquired
-evidence_links:
-  - https://github.com/x/pull/42
-open_questions:
-  - 재현 테스트 횟수의 정확한 수치
----
+def schema_episode():
+    """schema.md 의 첫 ```markdown 블록(에피소드 템플릿)을 문면 그대로 읽는다.
 
-## 맥락
-"""
+    베껴 두면 문면이 아니라 문면의 사본을 고정하게 된다 — 실제로 처음 쓸 때 여러 줄
+    open_questions 항목이 빠졌고, 그게 이어짐 줄 분기를 낳은 바로 그 입력이었다.
+    어휘와 달리 여기는 실물에 붙이는 것이 맞다. vocabulary.md 는 태그를 늘리는
+    무관한 이유로 바뀌지만, 이 템플릿이 바뀌면 파서가 따라가야 하는 것이 맞다.
+    """
+    with open(SCHEMA, encoding="utf-8") as f:
+        found = re.search(r"```markdown\n(.*?)```", f.read(), re.S)
+    assert found, "schema.md 에서 에피소드 템플릿을 찾지 못했다"
+    return found.group(1)
+
+
+SCHEMA_EPISODE = schema_episode()
 
 
 class CareerCase(unittest.TestCase):
@@ -171,6 +170,12 @@ class 주석_규칙은_따옴표와_URL_을_건드리지_않는다(CareerCase):
             "---\nid: a\nevidence_links:\n  - https://github.com/x/pull/42#c1\n---\n")
         self.assertEqual(fm["evidence_links"], ["https://github.com/x/pull/42#c1"])
 
+    def test_아포스트로피가_주석_제거를_막지_않는다(self):
+        """따옴표는 값이 따옴표로 시작할 때만 따옴표다. 아무 데서나 세면 don't 의
+        아포스트로피가 닫히지 않는 여는 따옴표가 되어 주석이 값에 남는다."""
+        fm = bi.parse_frontmatter("---\nid: a\ntitle: don't stop  # 주석\n---\n")
+        self.assertEqual(fm["title"], "don't stop")
+
     def test_목록_항목_안의_우물정은_주석이_아니다(self):
         """open_questions 는 산문이고 '#42' 는 되찾을 경로다. 여기서 자르면 뜻이 사라진다."""
         fm = bi.parse_frontmatter(
@@ -222,6 +227,16 @@ class 블록_스칼라를_읽는다(CareerCase):
     def test_블록이_끝나면_다음_키가_이어진다(self):
         fm = bi.parse_frontmatter("---\nid: a\ntitle: >\n  제목\nskills: [디버깅]\n---\n")
         self.assertEqual(fm["skills"], ["디버깅"])
+
+    def test_덜_들여쓴_줄이_사라지지_않는다(self):
+        """본문 최소 들여쓰기로 벗긴다. 첫 줄 기준으로 자르면 뒤가 통째로 사라진다."""
+        fm = bi.parse_frontmatter("---\nid: a\ntitle: |\n    깊게\n  얕게\n---\n")
+        self.assertEqual(fm["title"], "깊게\n얕게")
+
+    def test_chomping_표시를_받아도_값이_남는다(self):
+        for mark in ("|", "|-", "|+", ">", ">-", ">+"):
+            fm = bi.parse_frontmatter("---\nid: a\ntitle: %s\n  제목\n---\n" % mark)
+            self.assertEqual(fm["title"], "제목", mark)
 
     def test_표는_한_행이_한_줄이다(self):
         self.episode("a", "---\nid: a\ntitle: |\n  첫 줄\n  둘째 줄\n---\n")
@@ -313,19 +328,80 @@ class 저장소가_비어_있어도_만든다(CareerCase):
         self.assertEqual(self.coverage(text, "디버깅"), 0)
 
 
-class 실물_vocabulary_md_가_읽힌다(unittest.TestCase):
+class 실물_vocabulary_md_가_읽힌다(CareerCase):
     """표 형식이 바뀌면 커버리지가 통째로 비고, 0인 축을 보는 앵커 선택이 무력해진다.
 
-    형식 단언은 fixture 쪽에 있다. 여기서는 실물이 파싱되는지만 본다 —
-    태그를 늘리는 변경에 이 파일이 흔들리지 않게.
+    형식 단언은 fixture 쪽에 있다. 여기서는 실물이 파싱되는지만 본다 — 태그를 늘리는
+    변경에 이 파일이 흔들리지 않게. 어휘 경로를 넘기지 않아 스크립트의 기본값
+    (references/vocabulary.md)을 그대로 탄다.
     """
 
-    def test_소제목별로_태그가_나온다(self):
-        groups = bi.load_vocabulary(REAL_VOCAB)
-        self.assertGreaterEqual(len(groups), 2)
-        for name, tags in groups.items():
-            self.assertTrue(tags, name)
-            self.assertNotIn("태그", tags)
+    def setUp(self):
+        super().setUp()
+        done = subprocess.run([sys.executable, SCRIPT, self.career],
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        with open(os.path.join(self.career, "index.md"), encoding="utf-8") as f:
+            self.text = f.read()
+
+    def test_소제목별로_한_줄씩_나온다(self):
+        lines = [l for l in self.text.splitlines() if l.startswith("**")]
+        self.assertGreaterEqual(len(lines), 2)
+        for line in lines:
+            self.assertIn(" 0", line)
+            self.assertNotIn("태그 0", line)  # 표 머리글이 태그로 새어 나오지 않는다
+
+
+class 커버리지_줄의_형식이_고정된다(CareerCase):
+    """이 줄을 보고 다음에 캘 축을 고른다. 구분자·줄머리·그룹 이름이 다 형식이다."""
+
+    def setUp(self):
+        super().setUp()
+        self.episode("a", "---\nid: a\ntitle: 첫째\nskills: [디버깅, 없는태그]\n---\n")
+        self.text = self.index()
+
+    def test_구분자는_가운뎃점이다(self):
+        line = [l for l in self.text.splitlines() if l.startswith("**역량:**")][0]
+        self.assertIn(" · ", line)
+        self.assertEqual(line.count(" · "), 1)  # fixture 역량은 디버깅·갈등 둘
+
+    def test_기술_주제는_줄머리에서_주제로_줄인다(self):
+        heads = [l.split("**")[1] for l in self.text.splitlines() if l.startswith("**")]
+        self.assertIn("역량:", heads)
+        self.assertIn("주제:", heads)
+        self.assertNotIn("기술 주제:", heads)
+
+    def test_어휘_밖은_어휘_밖이라는_줄로_나온다(self):
+        self.assertIn("**어휘 밖:** 없는태그 1", self.text)
+
+    def test_같은_태그를_두_번_적어도_한_번만_나온다(self):
+        line = [l for l in self.text.splitlines() if l.startswith("**역량:**")][0]
+        self.assertEqual(line.count("디버깅"), 1)
+
+
+class 표를_깨뜨릴_수_있는_값(CareerCase):
+    def test_값에_든_파이프를_이스케이프한다(self):
+        # row() 헬퍼는 이스케이프된 파이프도 구분자로 세므로 원문 줄로 본다.
+        self.episode("a", "---\nid: a\ntitle: a | b\n---\n")
+        body = self.section(self.index(), "에피소드").strip().splitlines()
+        self.assertEqual(len(body), 3, body)  # 머리글 · 구분선 · 행 하나
+        self.assertIn("| a | a \\| b |", body[2])
+
+
+class 모르는_값은_비운다(CareerCase):
+    """schema.md: "모르는 필드는 ~로 두고 open_questions에 한 줄 남긴다"."""
+
+    def test_스칼라의_물결은_빈_값이다(self):
+        self.assertEqual(bi.parse_frontmatter("---\nid: a\ntitle: ~\n---\n")["title"], "")
+
+    def test_인라인_목록_안의_물결도_빈_값이다(self):
+        fm = bi.parse_frontmatter("---\nid: a\nstack: [~, Redis]\n---\n")
+        self.assertEqual(fm["stack"], ["", "Redis"])
+
+    def test_산문_목록의_따옴표는_벗기지_않는다(self):
+        fm = bi.parse_frontmatter(
+            '---\nid: a\nopen_questions:\n  - "두 시간쯤" 까지만 나옴\n---\n')
+        self.assertEqual(fm["open_questions"], ['"두 시간쯤" 까지만 나옴'])
 
 
 class 잘못_부르면_트레이스백_대신_쓰임을_낸다(CareerCase):
@@ -357,6 +433,15 @@ class 잘못_부르면_트레이스백_대신_쓰임을_낸다(CareerCase):
             capture_output=True, text=True)
         self.assertTrue(bool(done.stdout) != bool(done.stderr), (done.stdout, done.stderr))
 
+    def test_읽을_수_없는_파일은_건너뛰지_않는다(self):
+        """조용히 빠지면 역량 커버리지가 그만큼 틀리고, 그 줄이 다음에 캘 자리다."""
+        with open(os.path.join(self.career, "episodes", "broken.md"), "wb") as f:
+            f.write(b"\xff\xfe not utf-8")
+        rc, out = self.build()
+        self.assertEqual(rc, 1)
+        self.assertNotIn("Traceback", out)
+        self.assertIn("broken.md", out)
+
     def test_import_해도_실행되지_않는다(self):
         done = subprocess.run(
             [sys.executable, "-c",
@@ -368,4 +453,4 @@ class 잘못_부르면_트레이스백_대신_쓰임을_낸다(CareerCase):
 
 
 if __name__ == "__main__":
-    unittest.main(verbosity=1)
+    unittest.main(verbosity=2)
