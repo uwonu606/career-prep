@@ -1,5 +1,7 @@
 # career-prep
 
+[![test](https://github.com/uwonu606/career-prep/actions/workflows/test.yml/badge.svg)](https://github.com/uwonu606/career-prep/actions/workflows/test.yml)
+
 경험을 인지면접으로 캐내 구조화해 쌓고, 면접관 시점으로 검증하는 취업 준비 툴킷.
 
 ## 무엇을 하는가
