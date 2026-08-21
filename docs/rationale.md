@@ -658,8 +658,19 @@ required status check 을 `main` 에 걸되, Repository admin 은 우회할 수 
 "저장소가 검증됐다"가 아니라 "이 둘의 경계가 깨지지 않았다"까지만 말한다.
 
 테스트 파일은 하드코딩이 아니라 `git ls-files '*/test_*.py' 'test_*.py'` 발견 루프로
-찾고 0개면 잡을 실패시키므로, 테스트를 추가하면 워크플로 수정 없이 편입된다 — CI 를
-붙일 때는 테스트 파일이 하나뿐이라 재본 적이 없던 주장이다. #16 이 그 첫 실측이다.
+찾고 0개면 잡을 실패시키므로, 테스트를 추가하면 워크플로 수정 없이 편입된다. CI 를 붙일
+때는 테스트 파일이 하나뿐이라 이건 재본 적이 없는 주장이었다. #16 이 두 번째 파일을
+넣어 쟀다 — 워크플로를 고치지 않았는데 `3.9` · `3.14` 두 잡 모두에서 둘 다 돌았다.
+
+```
+== skills/add-experience/scripts/test_build_index.py
+Ran 37 tests in 0.849s
+== skills/add-experience/scripts/test_repo_scan.py
+Ran 18 tests in 0.892s
+```
+
+`gate` 는 그대로 하나로 접힌다. 러너에 파이썬 버전이 둘이라 발견 루프도 두 번 도는데,
+룰셋에 등록된 이름은 여전히 `gate` 하나다.
 
 ### 잔 결정
 
