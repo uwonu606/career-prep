@@ -132,8 +132,13 @@ def load_vocabulary(path):
 
 
 def row(cells):
-    # 값에 들어간 | 가 표를 깨지 않게 막는다
-    return "| " + " | ".join(str(c).replace("|", "\\|") if str(c) else "—" for c in cells) + " |"
+    # 값에 들어간 | 와 개행이 표를 깨지 않게 막는다. None 은 "None" 이 아니라 빈 칸이다.
+    out = []
+    for c in cells:
+        s = "" if c is None else str(c)
+        s = " ".join(s.split("\n")).strip()
+        out.append(s.replace("|", "\\|") if s else "—")
+    return "| " + " | ".join(out) + " |"
 
 
 def table(headers, rows):
