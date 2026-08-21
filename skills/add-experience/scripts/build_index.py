@@ -131,10 +131,24 @@ def clean(v):
     return "" if v == "~" else v
 
 
+def read(path):
+    """읽지 못한 파일을 건너뛰지 않는다. 에피소드 하나가 조용히 빠지면 역량 커버리지가
+    그만큼 틀리고, 그 줄이 다음에 캘 자리를 고르는 근거다.
+
+    낡은 index.md 는 지우지 않고 그대로 둔다 — 파생 캐시라 지우는 쪽이 손실이 크고,
+    종료 코드 1 이 다시 만들지 못했다는 것을 말한다.
+    """
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as e:
+        print(f"읽을 수 없다: {path} ({e.__class__.__name__})")
+        return None
+
+
 def load_vocabulary(path):
     """vocabulary.md 의 표 첫 열을, 소제목별로 나눠 순서대로 읽는다."""
     groups, current = {}, None
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in (read(path) or "").splitlines():
         line = line.strip()
         if line.startswith("## "):
             current = line[3:].strip()
@@ -187,13 +201,19 @@ def main():
 
     episodes = []
     for f in sorted((career / "episodes").glob("*.md")):
-        fm = parse_frontmatter(f.read_text(encoding="utf-8"))
+        text = read(f)
+        if text is None:
+            return 1
+        fm = parse_frontmatter(text)
         fm.setdefault("id", f.stem)
         episodes.append(fm)
 
     projects = []
     for f in sorted((career / "projects").glob("*/project.md")):
-        fm = parse_frontmatter(f.read_text(encoding="utf-8"))
+        text = read(f)
+        if text is None:
+            return 1
+        fm = parse_frontmatter(text)
         fm.setdefault("id", f.parent.name)
         projects.append(fm)
 
