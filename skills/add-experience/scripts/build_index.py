@@ -4,7 +4,7 @@
 각 파일의 frontmatter 가 진실이고 index.md 는 파생 캐시다.
 사용자가 파일을 직접 고치는 것이 정상 동작이므로, index 를 읽기 전에 매번 이걸 돌린다.
 
-    python3 build_index.py <career_dir> [vocabulary.md 경로]
+    python3 build_index.py <career 절대경로> [vocabulary.md 경로]
 
 Python 3.9+ · 표준 라이브러리만 쓴다.
 """
@@ -149,15 +149,20 @@ def table(headers, rows):
 
 def main():
     if len(sys.argv) < 2:
-        print(__doc__)
+        print("쓰임: python3 build_index.py <career 절대경로> [vocabulary.md 경로]")
         return 1
     career = Path(sys.argv[1])
+    if not career.is_dir():
+        # career/ 를 만드는 것은 SKILL.md 1단계의 일이다. 여기서 만들면 오타 경로에
+        # 조용히 두 번째 저장소가 생기고, 역량 커버리지가 그만큼 갈라진다.
+        print(f"career 디렉토리가 아니거나 읽을 수 없다: {career}")
+        return 1
     default_vocab = Path(__file__).resolve().parent.parent / "references" / "vocabulary.md"
     vocab_path = Path(sys.argv[2]) if len(sys.argv) > 2 else default_vocab
     if not vocab_path.exists():
         # 어휘가 없으면 역량 커버리지의 0인 축이 통째로 사라진다. 앵커 선택이 그 줄에
         # 의존하므로 조용히 넘어가지 않는다.
-        print(f"vocabulary.md 를 찾을 수 없습니다: {vocab_path}", file=sys.stderr)
+        print(f"vocabulary.md 를 찾을 수 없다: {vocab_path}")
         return 1
 
     episodes = []
