@@ -2,13 +2,18 @@
 """저장소에서 인출 재료만 뽑는다.
 
 재료층 = 시각 · 개수 · 변경량 · 이름 없는 묶음.
-내용층 = 커밋 메시지 · 파일 경로 · 문서 본문. 이 스크립트는 내용층을 출력하지 않는다.
+내용층 = 커밋 메시지 · 파일 경로 · 문서 본문. stdout 에는 내용층이 한 글자도 나가지 않는다.
+내용층은 career/ 안의 **정리 파일**로 간다 — 그 파일을 읽는 사람은 사용자다.
 
-    python3 repo_scan.py <저장소 절대경로> [author 이메일]
+    python3 repo_scan.py <저장소 절대경로> <career 절대경로> [author 이메일]
 
 Python 3.9+ · 표준 라이브러리만 쓴다.
 """
 import collections
+import datetime
+import hashlib
+import os
+import re
 import subprocess
 import sys
 
@@ -37,21 +42,23 @@ def authors(repo):
 
 
 def commits(repo, mail):
-    """커밋마다 (epoch, 날짜, 시각, 변경파일집합, 신규수). 메시지는 읽지 않는다.
+    """커밋마다 (sha, epoch, 날짜, 시각, 변경파일집합, 신규수). 메시지는 여기서 읽지 않는다.
 
     author 는 git 의 --author 로 거르지 않는다. 그것은 앵커 없는 정규식이라
     남의 주소를 부분일치로 함께 집어온다 (me@x.com 이 notme@x.com 을 문다).
     %ae 를 받아 파이썬에서 정확히 비교한다.
     """
-    out = git(repo, "log", "--no-merges", "--reverse", f"--format={HEAD}%at{SEP}%ad{SEP}%ae",
+    out = git(repo, "log", "--no-merges", "--reverse",
+              f"--format={HEAD}%H{SEP}%at{SEP}%ad{SEP}%ae",
               "--date=format:%Y-%m-%d%H:%M", "--name-status")
     rows, cur = [], None
     for line in out.splitlines():
         if line.startswith(HEAD):
             if cur:
                 rows.append(cur)
-            at, ad, ae = line[len(HEAD):].split(SEP, 2)  # 주소가 마지막이라 남는 건 다 주소다
-            cur = {"at": int(at), "date": ad[:10], "time": ad[10:], "mail": ae, "files": set(), "new": 0}
+            sha, at, ad, ae = line[len(HEAD):].split(SEP, 3)  # 주소가 마지막이라 남는 건 다 주소다
+            cur = {"sha": sha, "at": int(at), "date": ad[:10], "time": ad[10:], "mail": ae,
+                   "files": set(), "new": 0}
         elif line.strip() and cur is not None:
             parts = line.split("\t")
             if len(parts) >= 2:
@@ -69,6 +76,21 @@ def commits(repo, mail):
     return rows
 
 
+def messages(repo):
+    """{sha: 커밋 메시지 전문}. 정리 파일 전용이다 — stdout 으로는 나가지 않는다.
+
+    구분자가 NUL(-z) 이라 본문에 어떤 문자가 들어 있어도 레코드가 깨지지 않는다.
+    """
+    out = git(repo, "log", "--no-merges", "-z", "--format=%H%x1f%B")
+    msgs = {}
+    for rec in out.split("\0"):
+        if not rec:
+            continue
+        sha, _, msg = rec.partition("\x1f")
+        msgs[sha] = msg
+    return msgs
+
+
 def cluster(rows):
     """같은 날 안에서, 파일이 겹치거나 시간이 붙어 있으면 한 묶음."""
     out = []
@@ -81,10 +103,11 @@ def cluster(rows):
             g["end"] = c["time"]
             g["files"] |= c["files"]
             g["new"] += c["new"]
+            g["commits"].append(c)
         else:
             out.append({"date": c["date"], "start": c["time"], "end": c["time"],
                         "at_start": c["at"], "at_end": c["at"],
-                        "n": 1, "files": set(c["files"]), "new": c["new"]})
+                        "n": 1, "files": set(c["files"]), "new": c["new"], "commits": [c]})
     return out
 
 
@@ -99,12 +122,84 @@ def number_by_day(gs):
             g["idx"], g["of"] = i, len(same)
 
 
+# 접두 하이픈으로 합쳐도 되는 구분자. 이 밖의 글자가 지워지면 정보가 소실된 것이다.
+구분자 = re.compile(r"[a-z0-9\-_. ]")
+
+
+def span(g):
+    """묶음의 시간 표기. 재료표와 정리 파일이 같은 문자열을 쓴다."""
+    return g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
+
+
+def slugify(name):
+    """저장소 디렉토리 이름을 프로젝트 slug 로 바꾼다. 형식은 references/schema.md.
+
+    영문 밖 글자(한글·악센트)는 [^a-z0-9] 에 걸려 통째로 사라진다. 그대로 두면
+    이름이 다른 두 저장소가 같은 slug 를 받아 정리가 한 디렉토리에 섞인다
+    ('한글이름'·'다른한글' → 둘 다 'repo', '계획-2026' → '2026').
+    소실이 있었으면 원본 이름의 짧은 해시를 붙여 구분을 되살린다.
+    """
+    low = name.lower()
+    s = re.sub(r"[^a-z0-9]+", "-", low).strip("-")
+    if any(not 구분자.match(ch) for ch in low):
+        h = hashlib.sha1(name.encode("utf-8")).hexdigest()[:6]
+        return f"{s}-{h}" if s else f"repo-{h}"
+    return s or "repo"
+
+
+def write_summary(career, repo, rows, gs, msgs):
+    """정리 파일을 쓰고 그 경로를 돌려준다. 내용층이 나가는 유일한 자리다.
+
+    읽는 사람은 사용자다. 메인은 이 파일을 열지 않는다 (SKILL.md 2단계).
+    파일명이 HEAD 라서 같은 HEAD 를 다시 스캔하면 덮어쓴다.
+    """
+    slug = slugify(os.path.basename(os.path.realpath(repo)))
+    head = git(repo, "rev-parse", "HEAD").strip()
+    short = git(repo, "rev-parse", "--short", "HEAD").strip()
+    d = os.path.join(career, "projects", slug, "artifacts")
+    os.makedirs(d, exist_ok=True)
+    path = os.path.join(d, f"repo-scan-{short}.md")
+
+    dates = [r["date"] for r in rows]
+    out = ["---",
+           f"scanned_at: {datetime.datetime.now().isoformat(timespec='seconds')}",
+           f"head: {head}",
+           "---",
+           "",
+           f"# 저장소 정리 — {slug} ({short})",
+           "",
+           f"커밋 {len(rows)} · 기간 {min(dates)} ~ {max(dates)} · 묶음 {len(gs)}",
+           ""]
+    # 재료표와 달리 여기는 전량이고 시간순이다. 사용자가 자기 하루를 되짚는 순서다.
+    for g in sorted(gs, key=lambda g: g["at_start"]):
+        out.append(f"## {g['date']}  {span(g)}  커밋 {g['n']}  ({g['idx']}/{g['of']})")
+        out.append("")
+        for c in g["commits"]:
+            lines = msgs.get(c["sha"], "").splitlines()
+            out.append(f"- {c['time']} `{lines[0] if lines else ''}`")
+            body = "\n".join(lines[1:]).strip("\n").rstrip()
+            if body:
+                bl = body.splitlines()
+                out.append(f"  본문: {bl[0]}")
+                out.extend(f"  {x}" if x else "" for x in bl[1:])
+            out.extend(f"  - {p}" for p in sorted(c["files"]))
+        out.append("")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(out).rstrip() + "\n")
+    return path
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("쓰임: python3 repo_scan.py <저장소 절대경로> [author 이메일]")
+    if len(sys.argv) < 3:
+        print("쓰임: python3 repo_scan.py <저장소 절대경로> <career 절대경로> [author 이메일]")
         return 1
     repo = sys.argv[1]
-    mail = sys.argv[2] if len(sys.argv) > 2 else None
+    career = sys.argv[2]
+    mail = sys.argv[3] if len(sys.argv) > 3 else None
+    if not os.path.isdir(career):
+        # 1단계가 이미 만들었어야 한다. 오타 경로에 트리를 통째로 만드는 것을 막는다.
+        print(f"career 디렉토리가 없다: {career}")
+        return 1
     if not git(repo, "rev-parse", "--is-inside-work-tree").strip():
         print("저장소가 아니거나 읽을 수 없다")
         return 1
@@ -127,11 +222,18 @@ def main():
 
     print(f"\n== 재료 ==  커밋 {len(rows)}  기간 {min(dates)} ~ {max(dates)}  묶음 {len(gs)}")
     print("날짜        시각          커밋  묶음  파일  신규")
-    for g in sorted(gs, key=lambda g: -g["n"])[:12]:
-        span = g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
+    shown = sorted(gs, key=lambda g: -g["n"])[:12]
+    for g in shown:
         idx = f"{g['idx']}/{g['of']}"
-        print(f"{g['date']}  {span:<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
+        print(f"{g['date']}  {span(g):<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
     print("\n파일 경로·커밋 메시지는 재료가 아니다. 이 출력에 없는 것은 묻지 않는다.")
+    path = write_summary(career, repo, rows, gs, messages(repo))
+    if len(gs) > len(shown):
+        # 표에서 잘린 묶음이 있다는 사실 자체를 알려야 한다. 없으면 잘린 표에서 센
+        # 숫자가 사용자에게 사실처럼 나간다.
+        print(f"묶음 {len(gs)}개 중 {len(shown)}개만 위에 표시했다. "
+              f"나머지 {len(gs) - len(shown)}개는 정리 파일에 있다.")
+    print(f"정리를 저장했다: {path}")
     return 0
 
 
