@@ -39,7 +39,7 @@ career/
 ├── index.md          자동 생성 (파생 캐시)
 ├── backlog.md        다음에 캘 장면 후보
 ├── self.md           역량 주장 — 근거와 반례를 함께 담는다
-├── projects/<slug>/{project.md, artifacts/}
+├── projects/<slug>/{project.md, artifacts/}   artifacts/ 에 repo-scan 정리가 쌓인다
 ├── episodes/<slug>.md
 └── applications/     (아직 안 씀)
 ```
@@ -53,8 +53,8 @@ career/
 | `└ references/schema.md` | 파일 레이아웃과 frontmatter |
 | `└ references/vocabulary.md` | 역량 태그와 여는 질문 (같은 표에서 나온다) |
 | `└ scripts/build_index.py` | `index.md` 재생성 |
-| `└ scripts/repo_scan.py` | 저장소에서 인출 재료만 뽑는다 — 시각·개수·이름 없는 묶음 |
-| `└ scripts/test_repo_scan.py` | 재료층 밖으로 새지 않는지 고정한다 |
+| `└ scripts/repo_scan.py` | 재료층(시각·개수·묶음)은 화면으로, 내용층(커밋 제목·본문·경로)은 `artifacts/` 의 정리 파일로 |
+| `└ scripts/test_repo_scan.py` | 두 층이 갈리는 자리를 고정한다 — 화면에 내용층이 없고 파일에는 있다 |
 | `skills/review-experience/` | 검증하고 되캔다 |
 | `└ references/interviewer.md` | 면접관 판정 기준과 반환 형식 |
 | `docs/rationale.md` | 설계 근거 — 뒤집기 전에 읽을 것 |
