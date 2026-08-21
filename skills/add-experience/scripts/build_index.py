@@ -15,19 +15,25 @@ from pathlib import Path
 BAR = " · "
 
 
+def indent_of(line):
+    return len(line) - len(line.lstrip())
+
+
 def strip_comment(v):
     """따옴표 밖에서 공백 뒤에 오는 # 부터 줄 끝까지를 주석으로 본다 (YAML 규칙).
 
-    URL 앵커(.../42#c1)는 앞에 공백이 없어 걸리지 않고, 따옴표 안의 #도 살아남는다.
+    따옴표는 값이 따옴표로 시작할 때만 따옴표다. 아무 데서나 세면 `don't stop  # 주석`
+    의 아포스트로피가 닫히지 않는 여는 따옴표가 되어 주석이 값에 남는다.
+    URL 앵커(.../42#c1)는 앞에 공백이 없어 걸리지 않는다.
     """
-    quote = ""
-    for i, ch in enumerate(v):
-        if quote:
-            if ch == quote:
-                quote = ""
-        elif ch in "\"'":
-            quote = ch
-        elif ch == "#" and (i == 0 or v[i - 1] in " \t"):
+    start = 0
+    if v[:1] in ('"', "'"):
+        close = v.find(v[0], 1)
+        if close == -1:
+            return v  # 닫히지 않은 따옴표는 통째로 값으로 둔다
+        start = close + 1
+    for i in range(start, len(v)):
+        if v[i] == "#" and (i == 0 or v[i - 1] in " \t"):
             return v[:i].rstrip()
     return v
 
@@ -37,13 +43,17 @@ def parse_frontmatter(text):
 
     지원: key: value / key: [a, b] / key: 다음 줄부터 "- item" (여러 줄 이어짐 포함)
     / 한 단계 중첩 맵 / 블록 스칼라(| >) / 값 뒤의 인라인 주석.
+
+    `block_key` 는 "key:" 만 나와 목록인지 맵인지 아직 모르는 키이고, `map_key` 는
+    들여쓴 "k: v" 가 와서 맵으로 확정된 키다. 둘은 같은 줄에서 시작해 다음 줄이
+    갈라 준다.
     """
     if not text.startswith("---"):
         return {}
     end = text.find("\n---", 3)
     if end == -1:
         return {}
-    data, key, nested = {}, None, None
+    data, block_key, map_key = {}, None, None
     lines = text[3:end].splitlines()
     i = 0
     while i < len(lines):
@@ -51,20 +61,22 @@ def parse_frontmatter(text):
         i += 1
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
-        indent = len(raw) - len(raw.lstrip())
+        indent = indent_of(raw)
         line = raw.strip()
 
-        if line.startswith("- ") and key:
-            if not isinstance(data.get(key), list):
-                data[key] = []  # "key:" 다음 줄부터 목록이 오면 맵이 아니라 목록이다
-            data[key].append(line[2:].strip())
-            nested = None
+        if line.startswith("- ") and block_key:
+            if not isinstance(data.get(block_key), list):
+                data[block_key] = []  # "key:" 다음 줄부터 목록이 오면 맵이 아니라 목록이다
+            # 목록 항목에는 clean() 을 걸지 않는다. open_questions 가 산문이라
+            # 따옴표를 벗기면 `"두 시간쯤" 까지만 나옴` 같은 항목이 한쪽만 잘려 깨진다.
+            data[block_key].append(line[2:].strip())
+            map_key = None
             continue
 
         # 목록 항목이 여러 줄로 이어진다. schema.md 가 park한 칸에 요구하는 형태다 —
         # 여기서 안 받으면 콜론이 든 이어짐 줄이 가짜 최상위 키가 된다.
-        if indent and nested is None and isinstance(data.get(key), list) and data[key]:
-            data[key][-1] += " " + line
+        if indent and map_key is None and isinstance(data.get(block_key), list) and data[block_key]:
+            data[block_key][-1] += " " + line
             continue
 
         if ":" not in line:
@@ -72,37 +84,45 @@ def parse_frontmatter(text):
         k, _, v = line.partition(":")
         k, v = k.strip(), strip_comment(v.strip())
 
-        if indent and nested is not None:
-            data[nested][k] = clean(v)
+        if indent and map_key is not None:
+            data[map_key][k] = clean(v)
             continue
 
-        nested = None
+        map_key = None
         if v in ("|", ">", "|-", ">-", "|+", ">+"):
             # 블록 스칼라. 더 들여쓴 줄을 모아 | 는 개행으로, > 는 공백으로 잇는다.
-            body, base = [], None
+            # chomping 표시(-, +)는 받되 무시한다 — 표 한 칸에 들어갈 값이라 끝의
+            # 개행을 남기는 것과 자르는 것이 구분되지 않는다. 안 받으면 `>-` 가
+            # 그대로 값이 되어 지금 고치는 것과 같은 종류의 쓰레기가 남는다.
+            body = []
             while i < len(lines):
                 nxt = lines[i]
-                if nxt.strip() and len(nxt) - len(nxt.lstrip()) <= indent:
+                if nxt.strip() and indent_of(nxt) <= indent:
                     break
-                if nxt.strip() and base is None:
-                    base = len(nxt) - len(nxt.lstrip())
-                body.append(nxt[base:].rstrip() if nxt.strip() else "")
+                body.append(nxt)
                 i += 1
-            joined = "\n".join(body) if v[0] == "|" else " ".join(x for x in body if x)
-            data[k] = joined.strip()
-            key = None
+            # 들여쓰기는 본문 전체의 최소값으로 벗긴다. 첫 줄 기준으로 자르면 뒤에 오는
+            # 덜 들여쓴 줄이 통째로 사라진다 — 조용한 손실이다.
+            base = min([indent_of(b) for b in body if b.strip()] or [0])
+            body = [b[base:].rstrip() if b.strip() else "" for b in body]
+            # 블록 스칼라의 본문은 문면 그대로가 값이다. ~ 도 따옴표도 사용자가 적은
+            # 글자라 clean() 을 걸지 않는다.
+            data[k] = ("\n".join(body) if v[0] == "|" else " ".join(x for x in body if x)).strip()
+            block_key = None
             continue
         if v == "":
             data[k] = {}
-            nested = k
-            key = k
+            map_key = k
+            block_key = k
         elif v.startswith("[") and v.endswith("]"):
             inner = v[1:-1].strip()
-            data[k] = [x.strip() for x in inner.split(",") if x.strip()] if inner else []
-            key = None
+            # 인라인 목록의 항목은 태그·스택처럼 짧은 값이라 clean() 을 건다.
+            # schema.md 의 "모르는 필드는 ~ 로 두고" 가 여기서도 통해야 한다.
+            data[k] = [clean(x) for x in inner.split(",") if x.strip()] if inner else []
+            block_key = None
         else:
             data[k] = clean(v)
-            key = None
+            block_key = None
     return data
 
 
