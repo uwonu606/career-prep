@@ -38,6 +38,34 @@ def strip_comment(v):
     return v
 
 
+BLOCK_MARKS = ("|", ">", "|-", ">-", "|+", ">+")
+
+
+def read_block(lines, i, indent, mark):
+    """블록 스칼라 본문을 읽고 (값, 다음 줄 번호) 를 돌려준다.
+
+    | 는 개행을 지키고 > 는 공백으로 잇는다. chomping 표시(-, +)는 받되 무시한다 —
+    표 한 칸에 들어갈 값이라 끝의 개행을 남기는 것과 자르는 것이 구분되지 않는다.
+    안 받으면 `>-` 가 그대로 값이 되어, 이 함수가 막으려는 것과 같은 쓰레기가 남는다.
+
+    본문은 문면 그대로가 값이라 clean() 을 걸지 않는다 — ~ 도 따옴표도 사용자가 적은
+    글자다.
+    """
+    body = []
+    while i < len(lines):
+        nxt = lines[i]
+        if nxt.strip() and indent_of(nxt) <= indent:
+            break
+        body.append(nxt)
+        i += 1
+    # 들여쓰기는 본문 전체의 최소값으로 벗긴다. 첫 줄 기준으로 자르면 뒤에 오는 덜
+    # 들여쓴 줄이 통째로 사라진다 — 조용한 손실이다.
+    base = min([indent_of(b) for b in body if b.strip()] or [0])
+    body = [b[base:].rstrip() if b.strip() else "" for b in body]
+    joined = "\n".join(body) if mark[0] == "|" else " ".join(x for x in body if x)
+    return joined.strip(), i
+
+
 def parse_frontmatter(text):
     """--- 로 감싼 앞부분을 아주 작은 YAML 부분집합으로 읽는다.
 
@@ -85,29 +113,17 @@ def parse_frontmatter(text):
         k, v = k.strip(), strip_comment(v.strip())
 
         if indent and map_key is not None:
-            data[map_key][k] = clean(v)
+            # 블록 스칼라는 값이 오는 자리 어디서든 같게 읽는다. 여기서 안 읽으면
+            # 표시가 값이 되고 본문이 조용히 사라진다 — 위와 같은 종류의 손실이다.
+            if v in BLOCK_MARKS:
+                data[map_key][k], i = read_block(lines, i, indent, v)
+            else:
+                data[map_key][k] = clean(v)
             continue
 
         map_key = None
-        if v in ("|", ">", "|-", ">-", "|+", ">+"):
-            # 블록 스칼라. 더 들여쓴 줄을 모아 | 는 개행으로, > 는 공백으로 잇는다.
-            # chomping 표시(-, +)는 받되 무시한다 — 표 한 칸에 들어갈 값이라 끝의
-            # 개행을 남기는 것과 자르는 것이 구분되지 않는다. 안 받으면 `>-` 가
-            # 그대로 값이 되어 지금 고치는 것과 같은 종류의 쓰레기가 남는다.
-            body = []
-            while i < len(lines):
-                nxt = lines[i]
-                if nxt.strip() and indent_of(nxt) <= indent:
-                    break
-                body.append(nxt)
-                i += 1
-            # 들여쓰기는 본문 전체의 최소값으로 벗긴다. 첫 줄 기준으로 자르면 뒤에 오는
-            # 덜 들여쓴 줄이 통째로 사라진다 — 조용한 손실이다.
-            base = min([indent_of(b) for b in body if b.strip()] or [0])
-            body = [b[base:].rstrip() if b.strip() else "" for b in body]
-            # 블록 스칼라의 본문은 문면 그대로가 값이다. ~ 도 따옴표도 사용자가 적은
-            # 글자라 clean() 을 걸지 않는다.
-            data[k] = ("\n".join(body) if v[0] == "|" else " ".join(x for x in body if x)).strip()
+        if v in BLOCK_MARKS:
+            data[k], i = read_block(lines, i, indent, v)
             block_key = None
             continue
         if v == "":

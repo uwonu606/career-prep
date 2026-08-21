@@ -238,6 +238,23 @@ class 블록_스칼라를_읽는다(CareerCase):
             fm = bi.parse_frontmatter("---\nid: a\ntitle: %s\n  제목\n---\n" % mark)
             self.assertEqual(fm["title"], "제목", mark)
 
+    def test_중첩_맵_안에서도_같게_읽는다(self):
+        """자리에 따라 갈리면 같은 문법이 한쪽에서만 본문을 잃는다."""
+        fm = bi.parse_frontmatter(
+            "---\nid: a\nlinks:\n  note: |\n    메모\n    둘째 줄\n  repo: ~\n---\n")
+        self.assertEqual(fm["links"], {"note": "메모\n둘째 줄", "repo": ""})
+
+    def test_중첩_맵_블록_뒤에_최상위_키가_이어진다(self):
+        fm = bi.parse_frontmatter(
+            "---\nid: a\nlinks:\n  note: >\n    접힘\ntitle: 제목\n---\n")
+        self.assertEqual(fm["title"], "제목")
+
+    def test_목록_항목의_블록_표시는_지원_밖이다(self):
+        """`- |` 는 시퀀스 항목의 블록이라 다른 구문이다. 본문은 남고 표시가 섞인다 —
+        잃지는 않으므로 경계로 두고 여기 고정한다."""
+        fm = bi.parse_frontmatter("---\nid: a\nopen_questions:\n  - |\n    본문\n---\n")
+        self.assertEqual(fm["open_questions"], ["| 본문"])
+
     def test_표는_한_행이_한_줄이다(self):
         self.episode("a", "---\nid: a\ntitle: |\n  첫 줄\n  둘째 줄\n---\n")
         text = self.index()
