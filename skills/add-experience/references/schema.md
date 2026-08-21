@@ -9,7 +9,7 @@ career/
 ├── self.md                      역량 주장
 ├── projects/<slug>/
 │   ├── project.md
-│   └── artifacts/               회고·다이어그램·데모 링크·JD 스크랩
+│   └── artifacts/               회고·다이어그램·데모 링크·JD 스크랩 · repo-scan 정리
 ├── episodes/<slug>.md
 └── applications/                (아직 안 씀)
 ```
@@ -33,6 +33,7 @@ skills: [동시성, 디버깅]            # references/vocabulary.md 의 어휘
 evidence: verified                 # verified | recalled | unacquired
 evidence_links:
   - https://github.com/.../pull/42
+sourced_from: repo-scan-a1b2c3d   # 스캔이 짚어준 장면이면 그 정리 파일 이름. 말로 캔 것은 ~
 open_questions:
   - 결과 — 3회 시도(고친 순간의 화면 / 남은 숫자 / 이전 상태 대조) 전부 미도달.
     같은 각도로 다시 묻지 말 것. 깃 커밋에서 되찾는 쪽이 빠름
@@ -102,6 +103,27 @@ frontmatter 정보는 인출 틀 없이 그냥 묻는다. 기억 인출이 아�
 
 기간·인원·스택은 여기 한 번만 적고 에피소드는 참조로 물려받는다. 서류 심사에서 인사담당자가 5~10초 안에 보는 것이 이 목록이다.
 
+## 저장소 스캔 정리
+
+```
+projects/<slug>/artifacts/repo-scan-<HEAD 단축 SHA>.md
+```
+
+**`scripts/repo_scan.py` 가 쓰는 파생 파일이다. 직접 쓰는 자리가 아니다.**
+
+파일명이 곧 id다(다른 파일과 같은 규약). 날짜가 아니라 SHA 인 것은 **멱등** 때문이다 — 같은 HEAD 를 다시 스캔하면 같은 파일을 덮어쓰고, 커밋이 늘어난 뒤의 새 판은 이전 판의 상위집합이라 둘을 나란히 둘 이유가 없다.
+
+frontmatter 는 둘이다.
+
+| 필드 | 값 |
+|---|---|
+| `scanned_at` | 스캔을 돌린 로컬 시각 |
+| `head` | 스캔 시점 HEAD 의 **전체** SHA (파일명만 단축이다) |
+
+본문은 **묶음 전량 · 시간순**이고 커밋 제목·본문·파일 경로가 들어간다. **내용층이다. 읽는 사람은 사용자다.** 메인은 이 파일을 열지 않는다 — `SKILL.md` 2단계.
+
+정리를 읽은 것은 흔적을 연 것이 아니다. `evidence` 는 올라가지 않는다(위 `### evidence` 표와 같다).
+
 ## self.md
 
 ```markdown
@@ -130,6 +152,7 @@ frontmatter 정보는 인출 틀 없이 그냥 묻는다. 기억 인출이 아�
 - 병원예약 때 로그인이 자꾸 풀리던 것 — 2026-08-17 세션에서 언급, 안 캠
 - (2단계에서 고르지 않은 후보도 여기에)
 - AI검증 축 — 2026-08-17에 열었으나 "AI 코드는 그냥 읽고 쓰지 따로 고친 기억이 없다", 장면 없음
+- "fix: 빌드에서 폰트 아틀라스가 빠지던 것" — repo-scan-a1b2c3d 정리에서 읽어 알아봄(2026-08-21), 안 캠
 ```
 
 인터뷰 중에 사용자가 꺼냈지만 그 세션에서 캐지 못한 장면. 여기 적지 않으면 세션이 끝날 때 증발한다.
