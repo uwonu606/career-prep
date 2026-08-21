@@ -192,6 +192,71 @@ class HEAD_가_같으면_덮어쓰고_다르면_새_파일(RepoCase):
         self.assertEqual(len(self.scans()), 2, self.scans())
 
 
+class 영문_밖_이름은_해시로_갈린다(unittest.TestCase):
+    """한글·악센트는 [^a-z0-9] 에 걸려 지워진다. 그대로 두면 다른 저장소가 같은 slug 를
+    받아 정리가 한 디렉토리에 섞인다. 코드리뷰가 짚었고 실측으로 확인했다."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="repo_scan_nonascii_")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.career = os.path.join(self.tmp, "career")
+        os.makedirs(self.career)
+
+    def _scan(self, name):
+        repo = os.path.join(self.tmp, name)
+        os.makedirs(repo)
+        _git(repo, "init", "-q")
+        commit(repo, "2026-05-01T10:00:00", "solo@ex.com", "a", "m")
+        scan(repo, self.career)
+
+    def projects(self):
+        return sorted(os.listdir(os.path.join(self.career, "projects")))
+
+    def test_한글_이름_둘이_같은_자리를_쓰지_않는다(self):
+        self._scan("늑대인간")
+        self._scan("프로젝트")
+        self.assertEqual(len(self.projects()), 2, self.projects())
+        self.assertNotIn("repo", self.projects())   # 옛 fallback 으로 뭉치지 않는다
+
+    def test_숫자만_남는_이름도_갈린다(self):
+        # '게임잼-2026' 은 빈 문자열이 아니라 '2026' 이 되어 fallback 도 안 탔다
+        self._scan("게임잼-2026")
+        self._scan("설계-2026")
+        self.assertEqual(len(self.projects()), 2, self.projects())
+        self.assertNotIn("2026", self.projects())
+
+    def test_ASCII_이름은_해시가_안_붙는다(self):
+        self._scan("My_Game.Jam")
+        self.assertEqual(self.projects(), ["my-game-jam"])
+
+
+class 시간_표기는_한_곳에서_나온다(unittest.TestCase):
+    """재료표와 정리 파일이 같은 문자열을 써야 두 표면이 안 어긋난다."""
+
+    def setUp(self):
+        self.repo = tempfile.mkdtemp(prefix="repo_scan_span_")
+        self.addCleanup(shutil.rmtree, self.repo, True)
+        _git(self.repo, "init", "-q")
+        self.career = tempfile.mkdtemp(prefix="repo_scan_span_career_")
+        self.addCleanup(shutil.rmtree, self.career, True)
+
+    def test_묶음_시간_표기가_표와_파일에서_같다(self):
+        commit(self.repo, "2026-05-01T10:05:00", "solo@ex.com", "a", "m1")
+        commit(self.repo, "2026-05-01T10:40:00", "solo@ex.com", "a", "m2")
+        out = scan(self.repo, self.career)
+        f = scans_in(self.career)[0]
+        body = open(f, encoding="utf-8").read()
+        self.assertIn("10:05~10:40", out)
+        self.assertIn("10:05~10:40", body)
+
+    def test_한_커밋_묶음은_양쪽_다_단일_시각이다(self):
+        commit(self.repo, "2026-06-01T09:00:00", "solo@ex.com", "b", "m")
+        out = scan(self.repo, self.career)
+        body = open(scans_in(self.career)[0], encoding="utf-8").read()
+        self.assertNotIn("09:00~09:00", out)
+        self.assertNotIn("09:00~09:00", body)
+
+
 class slug_변환_규칙(unittest.TestCase):
     """저장소 디렉토리 이름이 projects/<slug>/ 를 정한다. realpath 기준이다."""
 

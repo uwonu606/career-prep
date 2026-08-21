@@ -11,6 +11,7 @@ Python 3.9+ · 표준 라이브러리만 쓴다.
 """
 import collections
 import datetime
+import hashlib
 import os
 import re
 import subprocess
@@ -121,9 +122,28 @@ def number_by_day(gs):
             g["idx"], g["of"] = i, len(same)
 
 
+# 접두 하이픈으로 합쳐도 되는 구분자. 이 밖의 글자가 지워지면 정보가 소실된 것이다.
+구분자 = re.compile(r"[a-z0-9\-_. ]")
+
+
+def span(g):
+    """묶음의 시간 표기. 재료표와 정리 파일이 같은 문자열을 쓴다."""
+    return g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
+
+
 def slugify(name):
-    """저장소 디렉토리 이름을 프로젝트 slug 로 바꾼다. 형식은 references/schema.md."""
-    s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    """저장소 디렉토리 이름을 프로젝트 slug 로 바꾼다. 형식은 references/schema.md.
+
+    영문 밖 글자(한글·악센트)는 [^a-z0-9] 에 걸려 통째로 사라진다. 그대로 두면
+    이름이 다른 두 저장소가 같은 slug 를 받아 정리가 한 디렉토리에 섞인다
+    ('늑대인간'·'프로젝트' → 둘 다 'repo', '게임잼-2026' → '2026').
+    소실이 있었으면 원본 이름의 짧은 해시를 붙여 구분을 되살린다.
+    """
+    low = name.lower()
+    s = re.sub(r"[^a-z0-9]+", "-", low).strip("-")
+    if any(not 구분자.match(ch) for ch in low):
+        h = hashlib.sha1(name.encode("utf-8")).hexdigest()[:6]
+        return f"{s}-{h}" if s else f"repo-{h}"
     return s or "repo"
 
 
@@ -152,8 +172,7 @@ def write_summary(career, repo, rows, gs, msgs):
            ""]
     # 재료표와 달리 여기는 전량이고 시간순이다. 사용자가 자기 하루를 되짚는 순서다.
     for g in sorted(gs, key=lambda g: g["at_start"]):
-        span = g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
-        out.append(f"## {g['date']}  {span}  커밋 {g['n']}  ({g['idx']}/{g['of']})")
+        out.append(f"## {g['date']}  {span(g)}  커밋 {g['n']}  ({g['idx']}/{g['of']})")
         out.append("")
         for c in g["commits"]:
             lines = msgs.get(c["sha"], "").splitlines()
@@ -205,9 +224,8 @@ def main():
     print("날짜        시각          커밋  묶음  파일  신규")
     shown = sorted(gs, key=lambda g: -g["n"])[:12]
     for g in shown:
-        span = g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
         idx = f"{g['idx']}/{g['of']}"
-        print(f"{g['date']}  {span:<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
+        print(f"{g['date']}  {span(g):<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
     print("\n파일 경로·커밋 메시지는 재료가 아니다. 이 출력에 없는 것은 묻지 않는다.")
     path = write_summary(career, repo, rows, gs, messages(repo))
     if len(gs) > len(shown):
