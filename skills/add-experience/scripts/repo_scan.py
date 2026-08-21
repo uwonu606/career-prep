@@ -7,7 +7,7 @@
 
     python3 repo_scan.py <저장소 절대경로> <career 절대경로> [author 이메일]
 
-표준 라이브러리만 쓴다.
+Python 3.9+ · 표준 라이브러리만 쓴다.
 """
 import collections
 import datetime

@@ -1,0 +1,37 @@
+name: test
+
+on:
+  push: { branches: [main] }
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix: { python: ['3.9', '3.14'] }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: '${{ matrix.python }}' }
+      - run: |
+          set -e
+          files=$(git ls-files '*/test_*.py' 'test_*.py')
+          [ -n "$files" ] || { echo "테스트 파일이 하나도 없다"; exit 1; }
+          for t in $files; do echo "== $t"; python3 "$t"; done
+
+  gate:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: '[ "${{ needs.test.result }}" = "success" ]'
