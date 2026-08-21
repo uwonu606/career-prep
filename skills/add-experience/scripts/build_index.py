@@ -159,10 +159,10 @@ def load_vocabulary(path):
         tag = cells[0] if cells else ""
         if not tag or tag == "태그" or set(tag) <= set("- :"):
             continue
-        groups.setdefault(current, [])
-        if tag not in groups[current]:
-            groups[current].append(tag)
-    return {k: v for k, v in groups.items() if v}
+        tags = groups.setdefault(current, [])
+        if tag not in tags:  # 같은 태그를 두 번 적어도 커버리지 줄에는 한 번만 나온다
+            tags.append(tag)
+    return groups  # 그룹 키는 append 직전에만 생기므로 빈 그룹은 만들어지지 않는다
 
 
 def row(cells):
@@ -280,7 +280,7 @@ def main():
         groups.setdefault("어휘 밖", []).extend(extra)
     lines += ["", "## 역량 커버리지", ""]
     for name, tags in groups.items():
-        label = "역량" if name == "역량" else ("주제" if "주제" in name else name)
+        label = "주제" if "주제" in name else name  # "기술 주제" 는 줄머리에서 "주제" 로 줄인다
         lines += [f"**{label}:** " + BAR.join(f"{t} {used.get(t, 0)}" for t in tags), ""]
 
     (career / "index.md").write_text("\n".join(lines), encoding="utf-8")
