@@ -213,14 +213,14 @@ class 영문_밖_이름은_해시로_갈린다(unittest.TestCase):
         return sorted(os.listdir(os.path.join(self.career, "projects")))
 
     def test_한글_이름_둘이_같은_자리를_쓰지_않는다(self):
-        self._scan("늑대인간")
-        self._scan("프로젝트")
+        self._scan("한글이름")
+        self._scan("다른한글")
         self.assertEqual(len(self.projects()), 2, self.projects())
         self.assertNotIn("repo", self.projects())   # 옛 fallback 으로 뭉치지 않는다
 
     def test_숫자만_남는_이름도_갈린다(self):
-        # '게임잼-2026' 은 빈 문자열이 아니라 '2026' 이 되어 fallback 도 안 탔다
-        self._scan("게임잼-2026")
+        # '계획-2026' 은 빈 문자열이 아니라 '2026' 이 되어 fallback 도 안 탔다
+        self._scan("계획-2026")
         self._scan("설계-2026")
         self.assertEqual(len(self.projects()), 2, self.projects())
         self.assertNotIn("2026", self.projects())
