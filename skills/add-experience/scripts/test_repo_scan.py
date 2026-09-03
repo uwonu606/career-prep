@@ -21,7 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "repo_scan.py")
 INDEX_SCRIPT = os.path.join(HERE, "build_index.py")
 
-LAST_LINE = "파일 경로·커밋 메시지는 재료가 아니다. 이 출력에 없는 것은 묻지 않는다."
+LAST_LINE = "파일 경로·커밋 본문은 재료가 아니다. 후보 제목 외에 이 출력에 없는 것은 묻지 않는다."
 SAVED_PREFIX = "정리를 저장했다: "
 TRUNCATED = "만 위에 표시했다"
 
@@ -86,17 +86,32 @@ class RepoCase(unittest.TestCase):
         return scans_in(self.career)
 
 
+def candidate_lines(out):
+    """`== 후보 ==` 절의 항목 줄만."""
+    got, on = [], False
+    for line in out.splitlines():
+        if line.startswith("== 후보 =="):
+            on = True
+            continue
+        if on and not line.strip():
+            break
+        if on:
+            got.append(line)
+    return got
+
+
 class 내용층은_출력되지_않는다(RepoCase):
-    """AC: 스캔 출력에 파일 경로·커밋 메시지·문서 본문이 없다."""
+    """AC: 스캔 출력에 파일 경로·커밋 본문·문서 본문이 없다. 커밋 제목은 후보 절에만 있다."""
 
     PATH_TOKEN = "PlayerHealthZZZ"
     MSG_TOKEN = "사운드파일을몰아넣었다ZZZ"
+    BODY_TOKEN = "k6로200VU에서재고마이너스37재현ZZZ"
     PROSE_TOKEN = "미해결명령이91에서41로준다ZZZ"
 
     def setUp(self):
         super().setUp()
         commit(self.repo, "2026-01-05T22:42:00", "solo@ex.com",
-               "src/%s.cs" % self.PATH_TOKEN, "feat: %s" % self.MSG_TOKEN)
+               "src/%s.cs" % self.PATH_TOKEN, "feat: %s\n\n%s" % (self.MSG_TOKEN, self.BODY_TOKEN))
         doc = os.path.join(self.repo, "docs", "adr", "0001.md")
         os.makedirs(os.path.dirname(doc), exist_ok=True)
         with open(doc, "w", encoding="utf-8") as f:
@@ -110,9 +125,16 @@ class 내용층은_출력되지_않는다(RepoCase):
         self.assertNotIn(".cs", self.out)
         self.assertNotIn("docs/", self.out)
 
-    def test_커밋_메시지가_없다(self):
-        self.assertNotIn(self.MSG_TOKEN, self.out)
-        self.assertNotIn("feat:", self.out)
+    def test_커밋_본문이_없다(self):
+        self.assertNotIn(self.BODY_TOKEN, self.out)
+
+    def test_커밋_제목은_후보_절에만_있다(self):
+        # 재료표에는 없고 후보 줄에는 원문 그대로 있다. 제목이 두 자리에 나가면 경계가 둘이 된다.
+        where = [ln for ln in self.out.splitlines() if self.MSG_TOKEN in ln]
+        self.assertEqual(where, [ln for ln in candidate_lines(self.out) if self.MSG_TOKEN in ln])
+        self.assertTrue(any("`feat: %s`" % self.MSG_TOKEN in ln for ln in where), where)
+        for r in rows(self.out):
+            self.assertNotIn(self.MSG_TOKEN, " ".join(r))
 
     def test_문서_본문이_없다(self):
         self.assertNotIn(self.PROSE_TOKEN, self.out)
@@ -155,10 +177,13 @@ class 정리_파일에는_내용층이_있다(RepoCase):
         self.assertIn("  본문: %s" % self.BODY_TOKEN, self.text)
         self.assertIn("  플래그로 잠근다.", self.text)   # 본문 이어지는 줄은 두 칸 들여쓴다
 
-    def test_같은_것이_stdout_에는_없다(self):
-        self.assertNotIn(self.MSG_TOKEN, self.out)
+    def test_본문과_경로는_stdout_에_없고_제목은_후보에만_있다(self):
         self.assertNotIn(self.BODY_TOKEN, self.out)
         self.assertNotIn(self.PATH_TOKEN, self.out)
+        self.assertNotIn("플래그로 잠근다", self.out)
+        where = [ln for ln in self.out.splitlines() if self.MSG_TOKEN in ln]
+        self.assertEqual(where, [ln for ln in candidate_lines(self.out) if self.MSG_TOKEN in ln])
+        self.assertEqual(len(where), 1)
 
     def test_frontmatter_는_scanned_at_과_head_둘이다(self):
         head = subprocess.run(["git", "-C", self.repo, "rev-parse", "HEAD"],
@@ -283,6 +308,59 @@ class slug_변환_규칙(unittest.TestCase):
         os.symlink(self.repo, link)
         scan(link, self.career)
         self.assertEqual(self.projects(), ["my-game-jam"])
+
+
+class 후보_절(RepoCase):
+    """후보는 큰 묶음 4개, 묶음당 제목 3개, 제목은 원문 그대로. 본문·경로는 없다."""
+
+    def many(self, days, per_day=1, body=""):
+        for d in range(1, days + 1):
+            for k in range(per_day):
+                commit(self.repo, "2026-09-%02dT10:%02d:00" % (d, k), "solo@ex.com",
+                       "src/dir%d/f%d_%d.py" % (d, d, k), "feat: 제목%d-%d" % (d, k) + body)
+
+    def test_묶음이_4_이하면_전부_나오고_제목은_원문이다(self):
+        self.many(3)
+        out = scan(self.repo, self.career)
+        self.assertIn("== 후보 ==  묶음 3개 전부", out)
+        lines = candidate_lines(out)
+        self.assertEqual(len(lines), 3)
+        self.assertIn("1. 2026-09-01 · 10:00 · `feat: 제목1-0`", lines[0])
+
+    def test_묶음이_5_이상이면_4개만_내고_몇_개_중인지_말한다(self):
+        self.many(6)
+        out = scan(self.repo, self.career)
+        self.assertIn("== 후보 ==  묶음 6개 중 4개", out)
+        self.assertEqual(len(candidate_lines(out)), 4)
+
+    def test_커밋_많은_묶음이_앞이고_재료표와_같은_순서다(self):
+        self.many(2)
+        for k in range(5):
+            commit(self.repo, "2026-09-09T20:%02d:00" % k, "solo@ex.com", "big%d" % k, "feat: 큰묶음%d" % k)
+        out = scan(self.repo, self.career)
+        lines = candidate_lines(out)
+        self.assertTrue(lines[0].startswith("1. 2026-09-09 · 20:00~20:04 · "), lines[0])
+        self.assertEqual([r[0] for r in rows(out)][:3], [ln.split()[1] for ln in lines[:3]])
+
+    def test_제목은_3개까지고_나머지는_개수만(self):
+        for k in range(5):
+            commit(self.repo, "2026-09-09T20:%02d:00" % k, "solo@ex.com", "big%d" % k, "feat: 큰묶음%d" % k)
+        out = scan(self.repo, self.career)
+        line = candidate_lines(out)[0]
+        self.assertIn("`feat: 큰묶음0` · `feat: 큰묶음1` · `feat: 큰묶음2` · 외 2", line)
+        self.assertNotIn("큰묶음3", line)
+
+    def test_후보에_본문과_경로가_없다(self):
+        self.many(2, body="\n\n본문토큰ZZZ 과 src/secret/path.py 언급")
+        out = scan(self.repo, self.career)
+        self.assertNotIn("본문토큰ZZZ", out)
+        self.assertNotIn("src/", out)
+        self.assertNotIn(".py", out)
+
+    def test_후보_절은_마지막_줄_앞에_온다(self):
+        self.many(2)
+        out = scan(self.repo, self.career).splitlines()
+        self.assertLess(out.index("== 후보 ==  묶음 2개 전부"), out.index(LAST_LINE))
 
 
 class 절단_표시(RepoCase):
