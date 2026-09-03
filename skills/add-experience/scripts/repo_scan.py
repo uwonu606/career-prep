@@ -2,8 +2,11 @@
 """저장소에서 인출 재료만 뽑는다.
 
 재료층 = 시각 · 개수 · 변경량 · 이름 없는 묶음.
-내용층 = 커밋 메시지 · 파일 경로 · 문서 본문. stdout 에는 내용층이 한 글자도 나가지 않는다.
+후보층 = 큰 묶음 몇 개의 날짜 · 시간대 · 커밋 **제목** 원문. 사용자가 장면을 알아보는 단서다.
+내용층 = 커밋 본문 · 파일 경로 · 문서 본문. stdout 에는 내용층이 한 글자도 나가지 않는다.
 내용층은 career/ 안의 **정리 파일**로 간다 — 그 파일을 읽는 사람은 사용자다.
+
+제목이 후보에 나가는 것은 rationale.md §14 "후보" 절에서 잰 결정이다. 본문과 경로는 여전히 안 나간다.
 
     python3 repo_scan.py <저장소 절대경로> <career 절대경로> [author 이메일]
 
@@ -20,6 +23,8 @@ import sys
 SEP = "|@|"          # \x1e 는 str.splitlines() 가 줄바꿈으로 취급해서 못 쓴다
 HEAD = "@@CMT@@"
 GAP_MIN = 45  # 이 간격 이상 벌어지면 다른 묶음으로 본다
+CAND_LIMIT = 4    # 후보로 내는 묶음 수. 열두 줄을 나열하면 "다 아닌 것 같은데요"가 돌아온다
+CAND_TITLES = 3   # 후보 하나에 보이는 제목 수
 
 
 def git(repo, *args):
@@ -131,6 +136,29 @@ def span(g):
     return g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
 
 
+def subject(msgs, sha):
+    """커밋 제목 한 줄. 본문은 여기서 잘려 나간다."""
+    lines = msgs.get(sha, "").splitlines()
+    return lines[0].strip() if lines else ""
+
+
+def candidates(gs, msgs):
+    """후보 묶음. 재료표와 같은 순서(커밋 많은 순, 같으면 시간순)로 앞 CAND_LIMIT 개.
+
+    제목은 원문 그대로다 — 바꿔 쓰면 해석층이 하나 끼고, 그 해석이 사용자 기억 자리에 앉는다.
+    본문과 파일 경로는 들어가지 않는다.
+    """
+    out = []
+    for g in sorted(gs, key=lambda g: -g["n"])[:CAND_LIMIT]:
+        titles = [subject(msgs, c["sha"]) for c in g["commits"]]
+        shown = " · ".join("`%s`" % t for t in titles[:CAND_TITLES])
+        rest = len(titles) - CAND_TITLES
+        if rest > 0:
+            shown += " · 외 %d" % rest
+        out.append((g, shown))
+    return out
+
+
 def slugify(name):
     """저장소 디렉토리 이름을 프로젝트 slug 로 바꾼다. 형식은 references/schema.md.
 
@@ -226,8 +254,14 @@ def main():
     for g in shown:
         idx = f"{g['idx']}/{g['of']}"
         print(f"{g['date']}  {span(g):<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
-    print("\n파일 경로·커밋 메시지는 재료가 아니다. 이 출력에 없는 것은 묻지 않는다.")
-    path = write_summary(career, repo, rows, gs, messages(repo))
+    msgs = messages(repo)
+    cands = candidates(gs, msgs)
+    head = "전부" if len(cands) == len(gs) else f"중 {len(cands)}개"
+    print(f"\n== 후보 ==  묶음 {len(gs)}개 {head}")
+    for i, (g, titles) in enumerate(cands, 1):
+        print(f"{i}. {g['date']} · {span(g)} · {titles}")
+    print("\n파일 경로·커밋 본문은 재료가 아니다. 후보 제목 외에 이 출력에 없는 것은 묻지 않는다.")
+    path = write_summary(career, repo, rows, gs, msgs)
     if len(gs) > len(shown):
         # 표에서 잘린 묶음이 있다는 사실 자체를 알려야 한다. 없으면 잘린 표에서 센
         # 숫자가 사용자에게 사실처럼 나간다.

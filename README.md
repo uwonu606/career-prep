@@ -53,8 +53,8 @@ career/
 | `└ references/schema.md` | 파일 레이아웃과 frontmatter |
 | `└ references/vocabulary.md` | 역량 태그와 여는 질문 (같은 표에서 나온다) |
 | `└ scripts/build_index.py` | `index.md` 재생성 |
-| `└ scripts/repo_scan.py` | 재료층(시각·개수·묶음)은 화면으로, 내용층(커밋 제목·본문·경로)은 `artifacts/` 의 정리 파일로 |
-| `└ scripts/test_repo_scan.py` | 두 층이 갈리는 자리를 고정한다 — 화면에 내용층이 없고 파일에는 있다 |
+| `└ scripts/repo_scan.py` | 재료층(시각·개수·묶음)과 후보(큰 묶음 4개의 커밋 제목 원문)는 화면으로, 내용층(커밋 본문·경로)은 `artifacts/` 의 정리 파일로 |
+| `└ scripts/test_repo_scan.py` | 층이 갈리는 자리를 고정한다 — 화면에 본문·경로가 없고, 제목은 후보 절에만 있고, 파일에는 전량이 있다 |
 | `skills/review-experience/` | 검증하고 되캔다 |
 | `└ references/interviewer.md` | 면접관 판정 기준과 반환 형식 |
 | `docs/rationale.md` | 설계 근거 — 뒤집기 전에 읽을 것 |
