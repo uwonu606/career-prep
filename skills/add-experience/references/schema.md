@@ -11,6 +11,7 @@ career/
 │   ├── project.md
 │   └── artifacts/               회고·다이어그램·데모 링크·JD 스크랩 · repo-scan 정리
 ├── episodes/<slug>.md
+├── companies/<slug>/{company.md, artifacts/}   add-company 가 만든다. 규약은 skills/add-company/references/schema.md
 └── applications/                (아직 안 씀)
 ```
 
