@@ -36,7 +36,7 @@
 /add-company <회사명> [채용공고 URL]   회사 하나를 공개 자료 18각도로 조사해 기록한다
 ```
 
-회사가 무슨 사업을 하고 어떤 인재를 찾는지를 **문장마다 출처를 달아** `career/companies/`에 쌓는다. 사용자에 대해 판정하지 않고("맞다/안 맞다"를 쓰지 않는다), 그 결과를 `add-experience`의 채굴 입력으로 흘리지도 않는다([`docs/rationale.md`](docs/rationale.md) #6) — 나와 회사를 대조하는 격차 서술은 아직 없는 `applications/`의 일이다. 근거는 #14~#19.
+회사가 무슨 사업을 하고 어떤 인재를 찾는지를 **문장마다 출처를 달아** `career/companies/`에 쌓는다. 사용자에 대해 판정하지 않고("맞다/안 맞다"를 쓰지 않는다), 그 결과를 `add-experience`의 채굴 입력으로 흘리지도 않는다([`docs/rationale.md`](docs/rationale.md) #6) — 나와 회사를 대조하는 격차 서술은 아직 없는 `applications/`의 일이다. 근거는 #17~#22.
 
 ## 데이터
 
