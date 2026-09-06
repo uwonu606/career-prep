@@ -172,6 +172,7 @@ curl -sS -A "$UA" "https://api.github.com/orgs/<login>" | python3 -c "import jso
 | 혁신의숲 | ClaudeBot 차단 ① | 링크(14) |
 | KIPRIS | `Disallow: /` ①; KIPRIS Plus API는 키·조건 미확인 | 링크(15) |
 | 팟캐스트 검색 API | 전부 미확인 또는 차단 | WebSearch(12) |
+| image.ninehire.com (나인하이어 채용 사이트 이미지 CDN) | robots `Disallow: /`(예외 `/homepage/`) ① 2026-09-06. 에이피알 조사에서 robots 판정 전에 1회 받아 버린 실수가 있었다 — 공고 이미지는 배너뿐이었다 | 공고 본문 텍스트(5); 이미지는 링크만 |
 
 ## 9. 지도 에이전트 반환 형식
 
