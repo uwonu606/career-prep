@@ -39,6 +39,14 @@
 
 **새 대화여야 하는 이유** — 채굴 대화를 본 상태로 검토하면 파일의 빈 곳을 대화 기억으로 메워버리고, 검토가 아무것도 드러내지 못한다. 격리를 서브에이전트가 아니라 **세션 경계**로 얻는다. 그래서 서브에이전트가 없는 환경에서도 똑같이 작동한다.
 
+지원할 회사가 정해졌으면:
+
+```
+/add-company <회사명> [채용공고 URL]   회사 하나를 공개 자료 18각도로 조사해 기록한다
+```
+
+회사가 무슨 사업을 하고 어떤 인재를 찾는지를 **문장마다 출처를 달아** `career/companies/`에 쌓는다. 사용자에 대해 판정하지 않고("맞다/안 맞다"를 쓰지 않는다), 그 결과를 `add-experience`의 채굴 입력으로 흘리지도 않는다([`docs/rationale.md`](docs/rationale.md) #6) — 나와 회사를 대조하는 격차 서술은 아직 없는 `applications/`의 일이다. 근거는 #17~#22.
+
 ## 데이터
 
 사용자 작업 디렉토리의 `career/`에 쌓인다. **툴킷 저장소에는 들어오지 않는다** — 개인의 실패·갈등 기록이라 배포 대상이 아니다. 첫 실행 때 `.gitignore` 등록을 안내한다.
@@ -51,6 +59,7 @@ career/
 ├── projects/<slug>/{project.md, .harvested, artifacts/}   훑은 묶음과 repo-scan 정리
 ├── episodes/<slug>.md
 ├── journal/          일기 — 쓴 날로 나뉜다. frontmatter 없음
+├── companies/<slug>/{company.md, artifacts/}  회사 조사 — add-company 가 만든다. 원자료(DART 추출·에이전트 반환)는 artifacts/
 └── applications/     (아직 안 씀)
 ```
 
@@ -69,8 +78,15 @@ career/
 | `skills/harvest-repo/` | 저장소 하나를 대화마다 한 건씩 소진한다 |
 | `skills/review-experience/` | 검증하고 되캔다 |
 | `└ references/interviewer.md` | 면접관 판정 기준과 반환 형식 |
+| `skills/add-company/` | 회사 하나를 조사하고 기록한다 |
+| `└ references/catalog.md` | 18각도 × 5묶음 — 각도별 "있는지 확인하는 절차", 접근 등급(robots 허용 AND 약관 무금지만 직접 접근), 명령 블록 |
+| `└ references/schema.md` | 회사 파일 규약 — 자료 지도 / 무슨 사업 / 어떤 인재 / 교차점 / open_questions, 문장마다 출처 |
+| `└ references/agents.md` | 지도·묶음·수정 에이전트 프롬프트 템플릿 — 파서가 깨지면 픽스처를 더하고 고친다 |
+| `└ scripts/dart_fetch.py` `dart_extract.py` `dart_tables.py` | OpenDART 수집(키는 스크립트만 읽는다) · 사업보고서 원문 절 추출 · 직원·임원 표. 표준 라이브러리만 |
+| `└ scripts/test_extract.py` `test_fetch.py` | 파서 회귀(픽스처는 리포 밖, `ADD_COMPANY_FIXTURES`) · 수집기 합성 응답 테스트 |
 | `docs/rationale.md` | 설계 근거 — 뒤집기 전에 읽을 것 |
 | `docs/market-research.md` | 채용 프로세스 모델의 근거와 출처 |
+| `docs/company-research.md` | 회사 조사 소스·파서 실측 — robots·약관 판정, 사업보고서 XML 구조, 첫 수정 루프 |
 | `agents/tech-interviewer.md` | 격리 판정자 (Claude Code 전용, 읽기 전용) |
 
 ## 설치
@@ -81,11 +97,13 @@ career/
 npx skills add uwonu606/career-prep
 ```
 
-Claude Code에서는 플러그인으로 설치하면 `agents/tech-interviewer.md`까지 함께 들어간다. 그 밖의 환경에서는 `skills/` 넷만 들어가고, 검증은 새 대화로 격리한다.
+Claude Code에서는 플러그인으로 설치하면 `agents/tech-interviewer.md`까지 함께 들어간다. 그 밖의 환경에서는 `skills/` 다섯만 들어가고, 검증은 새 대화로 격리한다.
+
+`add-company`의 DART 각도(공시 문서·직원 현황·임원)는 OpenDART 인증키가 있을 때 돈다 — 개인용 즉시 발급, 무료. 작업 디렉토리의 `.env`에 `DART_API_KEY=…` 한 줄로 두면 스크립트만 그것을 읽는다(대화나 셸 명령에 키가 나오지 않는다). 키가 없어도 나머지 15각도는 그대로 돈다.
 
 ## 아직 없는 것
 
-- `applications/` — JD와 저장소를 대조한 **격차 서술**. 맞고 틀림을 판정하지 않고 근거가 없는 항목을 나열한다
+- `applications/` — `companies/`(회사가 찾는 것)와 `episodes/`(내가 가진 것)를 대조한 **격차 서술**. 맞고 틀림을 판정하지 않고 근거가 없는 항목을 나열한다
 - 인사담당자(5~10초 예산)·임원(컬처핏) 페르소나 — 다만 기술면접관이 프로젝트 밖 에피소드(알바 갈등·혼자 공부)에도 그대로 작동하는 것이 측정됐다. 급하지 않다
 - 자소서·포트폴리오 양식 제안
 - 여는 질문을 직무별로 생성하는 앵커 생성기

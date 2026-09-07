@@ -233,6 +233,17 @@ def main():
         fm.setdefault("id", f.parent.name)
         projects.append(fm)
 
+    # 회사는 add-company 가 만든다. 없으면 표도 넣지 않는다 — 회사를 쓰지 않는 저장소의
+    # index.md 가 한 줄도 바뀌지 않아야 한다.
+    companies = []
+    for f in sorted((career / "companies").glob("*/company.md")):
+        text = read(f)
+        if text is None:
+            return 1
+        fm = parse_frontmatter(text)
+        fm.setdefault("id", f.parent.name)
+        companies.append(fm)
+
     lines = [
         "<!-- 자동 생성 파일입니다. 원본은 각 파일의 frontmatter입니다. -->",
         "<!-- scripts/build_index.py 가 다시 만듭니다. 직접 고친 내용은 사라집니다. -->",
@@ -285,6 +296,23 @@ def main():
             [[e, ", ".join(forward.get(e) or []), ", ".join(backward.get(e) or [])] for e in linked],
         )
 
+    if companies:
+        lines += ["", "## 회사", ""]
+        lines += table(
+            ["id", "법인명", "브랜드", "조사일", "공고", "미해결"],
+            [
+                [
+                    c.get("id"),
+                    c.get("title"),
+                    c.get("brand"),
+                    c.get("date"),
+                    c.get("job_url"),
+                    len(c.get("open_questions") or []),
+                ]
+                for c in companies
+            ],
+        )
+
     used = {}
     for ep in episodes:
         for tag in ep.get("skills") or []:
@@ -300,7 +328,7 @@ def main():
         lines += [f"**{label}:** " + BAR.join(f"{t} {used.get(t, 0)}" for t in tags), ""]
 
     (career / "index.md").write_text("\n".join(lines), encoding="utf-8")
-    print(f"episodes={len(episodes)} projects={len(projects)} -> {career / 'index.md'}")
+    print(f"episodes={len(episodes)} projects={len(projects)} companies={len(companies)} -> {career / 'index.md'}")
     return 0
 
 

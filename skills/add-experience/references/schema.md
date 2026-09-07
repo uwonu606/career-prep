@@ -15,6 +15,7 @@ career/
 ├── journal/
 │   ├── <쓴 날>.md               일기. 사용자가 직접 쓰고 직접 고친다
 │   └── .harvested               어디까지 후보로 냈는지 항목 id 한 줄
+├── companies/<slug>/{company.md, artifacts/}   add-company 가 만든다. 규약은 skills/add-company/references/schema.md
 └── applications/                (아직 안 씀)
 ```
 
