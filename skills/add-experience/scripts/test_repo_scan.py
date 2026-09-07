@@ -11,6 +11,7 @@
 """
 import glob
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -66,6 +67,11 @@ def rows(out):
 def scans_in(career):
     """career 안에 쌓인 정리 파일 목록."""
     return sorted(glob.glob(os.path.join(career, "projects", "*", "artifacts", "repo-scan-*.md")))
+
+
+def cursors_in(career):
+    """career 안에 쌓인 커서 파일 목록."""
+    return sorted(glob.glob(os.path.join(career, "projects", "*", ".harvested")))
 
 
 class RepoCase(unittest.TestCase):
@@ -562,6 +568,96 @@ class 잘못_부르면_트레이스백_대신_쓰임을_낸다(RepoCase):
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         self.assertTrue(callable(mod.commits))
+
+
+class 훑은_묶음은_다시_후보로_안_나온다(RepoCase):
+    """저장소를 여러 세션에 걸쳐 소진하는 장치. 커서를 스크립트가 읽고 쓴다."""
+
+    def nights(self, days):
+        for d in range(1, days + 1):
+            commit(self.repo, "2026-09-%02dT22:%02d:00" % (d, d), "solo@ex.com",
+                   "src/d%d.py" % d, "feat: 밤%d" % d)
+
+    def cursor(self):
+        got = cursors_in(self.career)
+        self.assertEqual(len(got), 1, got)
+        return open(got[0], encoding="utf-8").read()
+
+    def test_첫_스캔의_출력은_커서를_말하지_않는다(self):
+        # #14 가 끝-끝 6런으로 잰 문면이 첫 스캔의 판이다. 그 표면을 안 건드린다.
+        self.nights(6)
+        out = scan(self.repo, self.career)
+        self.assertIn("== 후보 ==  묶음 6개 중 4개", out)
+        self.assertNotIn(".harvested", out)
+        self.assertNotIn("이미 훑은", out)
+        self.assertNotIn("훑었다", out)
+
+    def test_두_번째_스캔은_남은_것만_낸다(self):
+        self.nights(6)
+        first = candidate_lines(scan(self.repo, self.career))
+        second_out = scan(self.repo, self.career)
+        second = candidate_lines(second_out)
+        self.assertEqual(len(first), 4)
+        self.assertEqual(len(second), 2)
+        self.assertIn("== 후보 ==  묶음 2개 전부  (이미 훑은 4개는 뺐다)", second_out)
+        firsts = {ln.split()[1] for ln in first}
+        self.assertTrue(firsts.isdisjoint({ln.split()[1] for ln in second}), (first, second))
+
+    def test_다_훑으면_낼_후보가_없다고_말한다(self):
+        self.nights(3)
+        scan(self.repo, self.career)
+        out = scan(self.repo, self.career)
+        self.assertIn("== 후보 ==  안 훑은 묶음이 없다  (묶음 3개를 전부 훑었다)", out)
+        self.assertEqual(candidate_lines(out), [])
+        self.assertIn("이 저장소에서 새로 낼 후보가 없다", out)
+
+    def test_앵커는_화면에_나온_날짜_시각이고_SHA_가_아니다(self):
+        # 커서가 내용층으로 가는 열쇠가 되면 안 된다. SHA 가 있으면 git show 가 가능해진다.
+        self.nights(2)
+        scan(self.repo, self.career)
+        text = self.cursor()
+        self.assertIn("2026-09-01T22:01", text)
+        self.assertIn("2026-09-02T22:02", text)
+        self.assertIsNone(re.search(r"[0-9a-f]{7,}", text), text)
+        head = subprocess.run(["git", "-C", self.repo, "rev-parse", "HEAD"],
+                              capture_output=True, text=True).stdout.strip()
+        self.assertNotIn(head[:7], text)
+
+    def test_커서를_지우면_처음부터_다시_난다(self):
+        self.nights(3)
+        first = candidate_lines(scan(self.repo, self.career))
+        os.remove(cursors_in(self.career)[0])
+        self.assertEqual(candidate_lines(scan(self.repo, self.career)), first)
+
+    def test_되돌리는_길은_두_번째_스캔부터_알려준다(self):
+        self.nights(6)
+        self.assertNotIn("되돌리려면", scan(self.repo, self.career))
+        out = scan(self.repo, self.career)
+        self.assertIn("되돌리려면 지운다: %s" % cursors_in(self.career)[0], out)
+
+    def test_재료표는_안_줄어든다(self):
+        # 재료는 저장소 전체의 모양이다. 후보만 훑은 것을 뺀다.
+        self.nights(6)
+        scan(self.repo, self.career)
+        out = scan(self.repo, self.career)
+        self.assertIn("== 재료 ==  커밋 6 ", out)
+        self.assertEqual(len(rows(out)), 6)
+
+    def test_커밋이_늘면_새_묶음이_후보로_돌아온다(self):
+        self.nights(3)
+        scan(self.repo, self.career)
+        commit(self.repo, "2026-10-05T21:00:00", "solo@ex.com", "src/new.py", "feat: 새 밤")
+        out = scan(self.repo, self.career)
+        lines = candidate_lines(out)
+        self.assertEqual(len(lines), 1)
+        self.assertIn("2026-10-05", lines[0])
+
+    def test_후보를_안_낸_판은_커서를_안_만든다(self):
+        # author 목록 분기는 rows 가 없다. 정리 파일도 커서도 남기지 않는다.
+        commit(self.repo, "2026-02-01T10:00:00", "me@ex.com", "a", "m")
+        commit(self.repo, "2026-02-02T10:00:00", "you@ex.com", "b", "m")
+        scan(self.repo, self.career)
+        self.assertEqual(cursors_in(self.career), [])
 
 
 if __name__ == "__main__":

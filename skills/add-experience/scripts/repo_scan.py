@@ -8,6 +8,9 @@
 
 제목이 후보에 나가는 것은 rationale.md #14 "후보" 절에서 잰 결정이다. 본문과 경로는 여전히 안 나간다.
 
+후보로 낸 묶음은 projects/<slug>/.harvested 에 적히고 다음 실행의 후보에서 빠진다.
+저장소 하나를 여러 세션에 걸쳐 소진하는 장치다 — 첫 스캔의 출력은 이 커서를 말하지 않는다.
+
     python3 repo_scan.py <저장소 절대경로> <career 절대경로> [author 이메일]
 
 Python 3.9+ · 표준 라이브러리만 쓴다.
@@ -25,6 +28,7 @@ HEAD = "@@CMT@@"
 GAP_MIN = 45  # 이 간격 이상 벌어지면 다른 묶음으로 본다
 CAND_LIMIT = 4    # 후보로 내는 묶음 수. 열두 줄을 나열하면 "다 아닌 것 같은데요"가 돌아온다
 CAND_TITLES = 3   # 후보 하나에 보이는 제목 수
+HARVESTED = ".harvested"   # 훑은 묶음. career/journal/.harvested 와 같은 이름, 같은 규약
 
 
 def git(repo, *args):
@@ -136,6 +140,37 @@ def span(g):
     return g["start"] if g["start"] == g["end"] else f"{g['start']}~{g['end']}"
 
 
+def anchor(g):
+    """묶음을 가리키는 id. 첫 커밋의 날짜·시각이고 SHA 가 아니다.
+
+    SHA 는 리베이스가 전부 갈아치우지만 author 시각은 보존된다. 그리고 이 값은
+    재료표와 후보 절에 이미 나가 있는 값이라, 커서 파일이 내용층으로 가는 열쇠가 되지 않는다.
+    같은 날 두 묶음이 같은 분에 시작할 수는 없다 — 45분 안에 붙어 있으면 한 묶음이다.
+    """
+    return f"{g['date']}T{g['start']}"
+
+
+def harvested(proj):
+    """이미 후보로 낸 묶음의 앵커 집합. 파일이 없으면 빈 집합이다."""
+    try:
+        with open(os.path.join(proj, HARVESTED), encoding="utf-8") as f:
+            return {ln.split()[0] for ln in f if ln.split()}
+    except OSError:
+        return set()
+
+
+def mark_harvested(proj, gs):
+    """후보로 낸 묶음을 커서에 붙인다. 화면에 낸 것과 같은 것만 들어간다.
+
+    쓰는 것이 스크립트인 이유는 메인이 쓰려면 앵커가 메인 컨텍스트에 들어와야 하기 때문이다.
+    사용자가 직접 지워 되돌릴 수 있게 사람이 읽는 줄로 적는다. write_summary 가 디렉토리를
+    이미 만든 뒤에 부른다.
+    """
+    with open(os.path.join(proj, HARVESTED), "a", encoding="utf-8") as f:
+        for g in gs:
+            f.write(f"{anchor(g)}  {span(g)}  커밋 {g['n']}\n")
+
+
 def subject(msgs, sha):
     """커밋 제목 한 줄. 본문은 여기서 잘려 나간다."""
     lines = msgs.get(sha, "").splitlines()
@@ -144,6 +179,8 @@ def subject(msgs, sha):
 
 def candidates(gs, msgs):
     """후보 묶음. 재료표와 같은 순서(커밋 많은 순, 같으면 시간순)로 앞 CAND_LIMIT 개.
+
+    받는 gs 는 훑지 않은 묶음만이다. 훑은 것이 빠져도 순서는 재료표의 부분열 그대로다.
 
     제목은 원문 그대로다 — 바꿔 쓰면 해석층이 하나 끼고, 그 해석이 사용자 기억 자리에 앉는다.
     본문과 파일 경로는 들어가지 않는다.
@@ -175,13 +212,13 @@ def slugify(name):
     return s or "repo"
 
 
-def write_summary(career, repo, rows, gs, msgs):
+def write_summary(career, slug, repo, rows, gs, msgs):
     """정리 파일을 쓰고 그 경로를 돌려준다. 내용층이 나가는 유일한 자리다.
 
     읽는 사람은 사용자다. 메인은 이 파일을 열지 않는다 (SKILL.md 2단계).
     파일명이 HEAD 라서 같은 HEAD 를 다시 스캔하면 덮어쓴다.
+    slug 는 main 이 만들어 넘긴다 — 커서 파일이 같은 자리를 쓴다.
     """
-    slug = slugify(os.path.basename(os.path.realpath(repo)))
     head = git(repo, "rev-parse", "HEAD").strip()
     short = git(repo, "rev-parse", "--short", "HEAD").strip()
     d = os.path.join(career, "projects", slug, "artifacts")
@@ -255,19 +292,38 @@ def main():
         idx = f"{g['idx']}/{g['of']}"
         print(f"{g['date']}  {span(g):<12}  {g['n']:>3}   {idx:>4}  {len(g['files']):>3}  {g['new']:>3}")
     msgs = messages(repo)
-    cands = candidates(gs, msgs)
-    head = "전부" if len(cands) == len(gs) else f"중 {len(cands)}개"
-    print(f"\n== 후보 ==  묶음 {len(gs)}개 {head}")
-    for i, (g, titles) in enumerate(cands, 1):
-        print(f"{i}. {g['date']} · {span(g)} · {titles}")
+    slug = slugify(os.path.basename(os.path.realpath(repo)))
+    proj = os.path.join(career, "projects", slug)
+    seen = harvested(proj)
+    # 재료표는 저장소 전체의 모양이라 그대로 두고, 후보만 훑은 것을 뺀다.
+    fresh = [g for g in gs if anchor(g) not in seen]
+    cands = candidates(fresh, msgs)
+    if not fresh:
+        print(f"\n== 후보 ==  안 훑은 묶음이 없다  (묶음 {len(gs)}개를 전부 훑었다)")
+        # 빈 줄로 절을 닫는다 — 이 줄은 후보가 아니라 후보가 없다는 안내다.
+        print("\n이 저장소에서 새로 낼 후보가 없다. 커밋이 늘면 다시 생긴다.")
+    else:
+        head = "전부" if len(cands) == len(fresh) else f"중 {len(cands)}개"
+        line = f"\n== 후보 ==  묶음 {len(fresh)}개 {head}"
+        if seen:
+            line += f"  (이미 훑은 {len(gs) - len(fresh)}개는 뺐다)"
+        print(line)
+        for i, (g, titles) in enumerate(cands, 1):
+            print(f"{i}. {g['date']} · {span(g)} · {titles}")
     print("\n파일 경로·커밋 본문은 재료가 아니다. 후보 제목 외에 이 출력에 없는 것은 묻지 않는다.")
-    path = write_summary(career, repo, rows, gs, msgs)
+    path = write_summary(career, slug, repo, rows, gs, msgs)
     if len(gs) > len(shown):
         # 표에서 잘린 묶음이 있다는 사실 자체를 알려야 한다. 없으면 잘린 표에서 센
         # 숫자가 사용자에게 사실처럼 나간다.
         print(f"묶음 {len(gs)}개 중 {len(shown)}개만 위에 표시했다. "
               f"나머지 {len(gs) - len(shown)}개는 정리 파일에 있다.")
     print(f"정리를 저장했다: {path}")
+    if cands:
+        mark_harvested(proj, [g for g, _ in cands])
+    if seen:
+        # 첫 스캔의 출력은 한 글자도 안 바뀐다 — #14 가 끝-끝으로 잰 문면이 그 판이다.
+        # 이 줄은 묶음이 후보에서 사라진 이유를 사용자가 알아야 하는 2회차부터만 나간다.
+        print(f"훑은 묶음은 후보에서 뺀다. 되돌리려면 지운다: {os.path.join(proj, HARVESTED)}")
     return 0
 
 
