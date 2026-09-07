@@ -36,15 +36,9 @@ slug를 정한다(`schema.md`, 법인명의 영문 표기 우선). `career/compa
 
 `있음`·`수동` 행이 하나라도 있는 묶음만 판다. 묶음당 에이전트 **하나**를 **병렬**로 띄운다("묶음" 템플릿). 각 에이전트에는 그 묶음의 지도 행만·확정값·조사일·`artifacts/`와 `catalog.md`의 절대 경로를 넘기고, 묶음 ②에는 `job_url`과 지도 에이전트가 받아 둔 홈페이지 HTML 경로도 넘긴다. 반환문은 **편집 없이** `artifacts/findings/findings-<묶음>.md`로 저장한다 — 묶음 토큰은 `dart`·`company`·`external`·`market`·`reputation`.
 
-**DART 묶음**은 스크립트 세 개를 이 순서로 돌린다(인자·종료 코드별 행동은 `agents.md` "묶음" 템플릿의 DART 절):
+**DART 묶음**은 스크립트 세 개(`dart_fetch.py` → `dart_extract.py` → `dart_tables.py`)를 이 순서로 돌린다 — 인자·종료 코드별 행동·픽스처 절차는 [`references/agents.md`](references/agents.md) "묶음" 템플릿의 DART 절이 정한다. 픽스처 디렉토리 `$ADD_COMPANY_FIXTURES`를 함께 넘긴다(타사 공시 원문이라 툴킷 리포 밖에 둔다; 변수가 없으면 사용자에게 위치를 묻는다).
 
-```
-python3 <스킬>/scripts/dart_fetch.py <corp_code 또는 법인명> --out <artifacts>/dart --years 5
-python3 <스킬>/scripts/dart_extract.py <artifacts>/dart/<rcept_no>.xml --out <artifacts>/dart/business.md --people <artifacts>/dart/people-report.md
-python3 <스킬>/scripts/dart_tables.py --emp <artifacts>/dart/empSttus-*.json --exec <artifacts>/dart/exctvSttus-<YYYY>.json --out <artifacts>/dart/people-tables.md
-```
-
-`dart_extract.py`가 종료 2(절을 못 찾음)·3(파싱 실패)이면 **파서를 고친다, 우회하지 않는다.** 묶음 에이전트는 원문 XML을 `$ADD_COMPANY_FIXTURES/{rcept_no}.xml`로 복사하고(픽스처 디렉토리는 이 환경변수가 가리킨다 — 타사 공시 원문이라 툴킷 리포 밖에 두고 setup 스킬이 위치를 정한다; 변수가 없으면 사용자에게 위치를 묻고 그 값으로 쓴다), 픽스처 README 표에 한 줄과 `expect.json`에 항목(기대값은 사람이 DART 뷰어로 확인해 적거나 일단 `null`)을 추가한 뒤 `실패`로 보고한다. 그러면 메인이 **수정 에이전트** 하나를 띄우고("수정" 템플릿), 전 픽스처가 통과하면 **DART 묶음 에이전트만** 재실행한다. 수정도 실패하면 그 각도는 `수동` + DART 뷰어 링크(`https://dart.fss.or.kr/dsaf001/main.do?rcptNo=<rcept_no>`, 사람이 브라우저로 연다)로 남긴다.
+`dart_extract.py`가 종료 2·3이면 **파서를 고친다, 우회하지 않는다.** 묶음 에이전트가 픽스처를 추가하고 `실패`로 보고하면 메인이 **수정 에이전트** 하나를 띄우고("수정" 템플릿), 전 픽스처가 통과하면 **DART 묶음 에이전트만** 재실행한다. 수정도 실패하면 그 각도는 `수동` + DART 뷰어 링크(`https://dart.fss.or.kr/dsaf001/main.do?rcptNo=<rcept_no>`, 사람이 브라우저로 연다)로 남긴다.
 
 서브에이전트가 없는 환경이면 메인이 같은 템플릿을 자기 절차로 읽고 같은 순서로 **순차** 수행한다 — 서브에이전트는 최적화이지 의존성이 아니다(rationale #12).
 
