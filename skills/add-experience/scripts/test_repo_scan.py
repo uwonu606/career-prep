@@ -22,7 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "repo_scan.py")
 INDEX_SCRIPT = os.path.join(HERE, "build_index.py")
 
-LAST_LINE = "파일 경로·커밋 본문은 재료가 아니다. 후보 제목 외에 이 출력에 없는 것은 묻지 않는다."
+LAST_LINE = "커밋 본문·파일 경로는 정리 파일에 있다. 후보를 만들 때 그 파일을 읽는다."
 SAVED_PREFIX = "정리를 저장했다: "
 TRUNCATED = "만 위에 표시했다"
 
