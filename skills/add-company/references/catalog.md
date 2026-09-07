@@ -124,6 +124,7 @@ curl -sS -A "$UA" "https://api.github.com/orgs/<login>" | python3 -c "import jso
 | 15 | 특허 | 어디에 기술을 걸었나 — 출원 분야 | KIPRIS · 기사 | WebSearch "<법인명> 특허 출원" | C | KIPRIS는 robots `Disallow: /` ①, KIPRIS Plus API는 키·조건 미확인 → 링크만. 사용자가 브라우저 자동화를 허용한 경우 검색식은 `AP=["주식회사 <법인명>"]` — 따옴표 없으면 토큰 일치로 무관 출원인이 섞인다(에이피알 95 vs 108 vs 161건 ①). 결과는 90건/페이지로 넘기며 IPC·행정상태를 직접 센다(분류통계 버튼은 본문에 표를 안 그림 ①) |
 | 16 | 제품 직접 사용 | 실제로 뭘 만드나 — 앱·웹, 스토어 리뷰 | 앱스토어 · 서비스 웹 | B2C면 WebSearch "<브랜드> 앱"으로 스토어 링크 확보 → `수동`. B2B면 데모·문서 페이지 링크 | C | 사람이 써 보는 각도. 리뷰 요약은 스토어 페이지 링크와 함께 |
 | 19 | 규제 인허가·등록 현황 | 어떤 제품이 규제 대상이고 허가를 받았나 — 의료기기 제조업·품목 허가(인허가 업종에만 해당) | 식약처 의료기기전자민원창구 "업체/제품정보 공개" (https://emedi.mfds.go.kr/search/data/MNU20237) · 공공데이터포털 "의료기기 품목허가 정보" API | WebSearch "<법인명> 의료기기 허가 식약처"로 인허가 보도 유무를 보고, 조회 페이지 URL을 링크로 제시해 `수동`으로 둔다 | C(브라우저 자동화가 있으면 A) | emedi.mfds.go.kr는 robots.txt 없음(/robots.txt 302→/error?p=404 ①)·이용약관에 자동화 금지 조항 없음(② WebFetch 요약)이라 접근은 허용이나 검색 페이지가 JS 셸이라 curl·WebFetch로는 조회 불가 ①. 헤드리스 브라우저로는 품목검색 탭 `#entpName`·업체검색 탭 `#entpName2`에 업체명을 넣고 같은 탭의 `input[value="검색"]`을 누르면 표가 나온다(에이피알 2026-09-06 ①). data.go.kr API(15057456·15057971)는 키 필요·약관 미확인 ③. 2026-09-06 에이피알 조사에서 추가 |
+| 20 | 증권사 리서치 리포트 | 애널리스트가 이 회사를 어떤 사업으로 보고 무엇을 추정하나 — 투자의견·목표주가·부문별 추정치 | 증권사 리포트 PDF · 한경컨센서스(consensus.hankyung.com) · FnGuide Company Guide · 리포트 브리핑 기사 | `stock_code`가 있으면 WebSearch "<법인명> <stock_code> 증권사 리포트"로 최근 리포트와 브리핑 기사 링크를 얻어 링크로 제시하고 `수동`으로 둔다. 비상장이면 `없음`(사유 "비상장") | C | 한경컨센서스 robots `Disallow: /` ① 2026-09-07, FnGuide·개별 증권사 PDF 호스트는 robots·약관 미확인 ③ → 전부 링크만. 브리핑 기사(뉴스핌 등)는 등급 B라 본문을 읽어도 된다 ①. 각도 10 뉴스·13 IR·14 투자 이력 어디에도 없는 유형이고 상장사면 늘 있다. 2026-09-07 에이피알 조사에서 추가 — 하나·교보·DB·한화·다올·키움 6곳 리포트 확인 ① |
 
 ## 6. 묶음 ⑤ 평판·프로세스 (등급 B/C)
 
@@ -172,6 +173,8 @@ curl -sS -A "$UA" "https://api.github.com/orgs/<login>" | python3 -c "import jso
 | 혁신의숲 | ClaudeBot 차단 ① | 링크(14) |
 | KIPRIS | `Disallow: /` ①; KIPRIS Plus API는 키·조건 미확인 | 링크(15) |
 | 팟캐스트 검색 API | 전부 미확인 또는 차단 | WebSearch(12) |
+| 한경컨센서스 | robots `Disallow: /` ① 2026-09-07 | WebSearch 결과와 리포트 브리핑 기사(20) |
+| FnGuide Company Guide | robots·약관 미확인 ③ — 확인 전까지 금지 | WebSearch 결과(20) |
 | image.ninehire.com (나인하이어 채용 사이트 이미지 CDN) | robots `Disallow: /`(예외 `/homepage/`) ① 2026-09-06. 에이피알 조사에서 robots 판정 전에 1회 받아 버린 실수가 있었다 — 공고 이미지는 배너뿐이었다 | 공고 본문 텍스트(5); 이미지는 링크만 |
 
 ## 9. 지도 에이전트 반환 형식
