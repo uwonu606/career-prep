@@ -38,7 +38,7 @@ skills: [동시성, 디버깅]            # references/vocabulary.md 의 어휘
 evidence: verified                 # verified | recalled | unacquired
 evidence_links:
   - https://github.com/.../pull/42
-sourced_from: repo-scan-a1b2c3d   # 스캔이 짚어준 장면이면 그 정리 파일 이름. 말로 캔 것은 ~
+sourced_from: repo-scan-a1b2c3d   # 스캔이면 정리 파일 이름, 일기면 항목 id. 말로 캔 것은 ~
 open_questions:
   - 결과 — 3회 시도(고친 순간의 화면 / 남은 숫자 / 이전 상태 대조) 전부 미도달.
     같은 각도로 다시 묻지 말 것. 깃 커밋에서 되찾는 쪽이 빠름
