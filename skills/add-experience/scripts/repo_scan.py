@@ -310,7 +310,7 @@ def main():
         print(line)
         for i, (g, titles) in enumerate(cands, 1):
             print(f"{i}. {g['date']} · {span(g)} · {titles}")
-    print("\n파일 경로·커밋 본문은 재료가 아니다. 후보 제목 외에 이 출력에 없는 것은 묻지 않는다.")
+    print("\n커밋 본문·파일 경로는 정리 파일에 있다. 후보를 만들 때 그 파일을 읽는다.")
     path = write_summary(career, slug, repo, rows, gs, msgs)
     if len(gs) > len(shown):
         # 표에서 잘린 묶음이 있다는 사실 자체를 알려야 한다. 없으면 잘린 표에서 센
