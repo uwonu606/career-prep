@@ -52,11 +52,11 @@ python3 <스킬>/scripts/dart_tables.py --emp <artifacts>/dart/empSttus-*.json -
 
 ## 3. 종합
 
-[`references/schema.md`](references/schema.md) 형식으로 `company.md`를 쓴다 — 자료 지도 → 무슨 사업을 하나 → 어떤 인재를 찾나 → 교차점 → open_questions, 이 다섯만 이 순서로. **모든 문장은 출처로 끝난다** — `[출처](url)` 또는 `artifacts/…` 경로. 출처 없는 문장은 본문에 못 들어오고 `open_questions`로 간다. 숫자는 원자료 값 그대로, 계산했으면 두 원값과 식이 보이게. 각도는 섹션이 아니라 출처로만 등장한다.
+[`references/schema.md`](references/schema.md) 형식으로 `company.md`를 쓴다 — 자료 지도 → 무슨 사업을 하나 → 어떤 인재를 찾나 → 교차점 → open_questions, 이 다섯만 이 순서로. **모든 문장은 출처로 끝난다** — `[출처](url)` 또는 `artifacts/…` 경로. 출처 없는 문장은 본문에 못 들어오고 `open_questions`로 간다. 숫자 표기·형태(비교표·라벨 목록·속성표·문단)·각도를 섹션으로 만들지 않는 것은 전부 `schema.md`가 정한다 — 형태는 사실 뭉치의 모양을 보고 사다리에서 고른다.
 
 교차점은 해석이 들어가는 유일한 자리다. **쓰기 전에 사용자에게 보여주고** `schema.md`의 비유도 질문으로 확인받는다 — *"둘째 문장은 직원 추이와 블로그 주제를 제가 이은 해석입니다. 이대로 둘까요, 고칠까요, 뺄까요?"* *"제가 잇지 않은 연결이 보이시나요?"* 사용자가 빼라면 뺀다. 흔들리면 `open_questions`로 내린다.
 
-**완료 조건:** frontmatter 각 필드가 값·`[]`·`~` 중 하나, 5섹션이 순서대로 존재, 출처 없는 문장 0, 지도의 `실패` 행이 `open_questions`에도 있고, frontmatter와 본문의 `open_questions` 항목 수가 같다.
+**완료 조건:** frontmatter 각 필드가 값·`[]`·`~` 중 하나, 5섹션이 순서대로 존재, 출처 없는 문장 0, 교차점 밖에 출처 넷 이상인 문단 0(`schema.md`의 검사 명령), 지도의 `실패` 행이 `open_questions`에도 있고, frontmatter와 본문의 `open_questions` 항목 수가 같다.
 
 ## 4. 마무리
 
