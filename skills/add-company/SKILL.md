@@ -36,15 +36,9 @@ slug를 정한다(`schema.md`, 법인명의 영문 표기 우선). `career/compa
 
 `있음`·`수동` 행이 하나라도 있는 묶음만 판다. 묶음당 에이전트 **하나**를 **병렬**로 띄운다("묶음" 템플릿). 각 에이전트에는 그 묶음의 지도 행만·확정값·조사일·`artifacts/`와 `catalog.md`의 절대 경로를 넘기고, 묶음 ②에는 `job_url`과 지도 에이전트가 받아 둔 홈페이지 HTML 경로도 넘긴다. 반환문은 **편집 없이** `artifacts/findings/findings-<묶음>.md`로 저장한다 — 묶음 토큰은 `dart`·`company`·`external`·`market`·`reputation`.
 
-**DART 묶음**은 스크립트 세 개를 이 순서로 돌린다(인자·종료 코드별 행동은 `agents.md` "묶음" 템플릿의 DART 절):
+**DART 묶음**은 스크립트 세 개(`dart_fetch.py` → `dart_extract.py` → `dart_tables.py`)를 이 순서로 돌린다 — 인자·종료 코드별 행동·픽스처 절차는 [`references/agents.md`](references/agents.md) "묶음" 템플릿의 DART 절이 정한다. 픽스처 디렉토리 `$ADD_COMPANY_FIXTURES`를 함께 넘긴다(타사 공시 원문이라 툴킷 리포 밖에 둔다; 변수가 없으면 사용자에게 위치를 묻는다).
 
-```
-python3 <스킬>/scripts/dart_fetch.py <corp_code 또는 법인명> --out <artifacts>/dart --years 5
-python3 <스킬>/scripts/dart_extract.py <artifacts>/dart/<rcept_no>.xml --out <artifacts>/dart/business.md --people <artifacts>/dart/people-report.md
-python3 <스킬>/scripts/dart_tables.py --emp <artifacts>/dart/empSttus-*.json --exec <artifacts>/dart/exctvSttus-<YYYY>.json --out <artifacts>/dart/people-tables.md
-```
-
-`dart_extract.py`가 종료 2(절을 못 찾음)·3(파싱 실패)이면 **파서를 고친다, 우회하지 않는다.** 묶음 에이전트는 원문 XML을 `$ADD_COMPANY_FIXTURES/{rcept_no}.xml`로 복사하고(픽스처 디렉토리는 이 환경변수가 가리킨다 — 타사 공시 원문이라 툴킷 리포 밖에 두고 setup 스킬이 위치를 정한다; 변수가 없으면 사용자에게 위치를 묻고 그 값으로 쓴다), 픽스처 README 표에 한 줄과 `expect.json`에 항목(기대값은 사람이 DART 뷰어로 확인해 적거나 일단 `null`)을 추가한 뒤 `실패`로 보고한다. 그러면 메인이 **수정 에이전트** 하나를 띄우고("수정" 템플릿), 전 픽스처가 통과하면 **DART 묶음 에이전트만** 재실행한다. 수정도 실패하면 그 각도는 `수동` + DART 뷰어 링크(`https://dart.fss.or.kr/dsaf001/main.do?rcptNo=<rcept_no>`, 사람이 브라우저로 연다)로 남긴다.
+`dart_extract.py`가 종료 2·3이면 **파서를 고친다, 우회하지 않는다.** 묶음 에이전트가 픽스처를 추가하고 `실패`로 보고하면 메인이 **수정 에이전트** 하나를 띄우고("수정" 템플릿), 전 픽스처가 통과하면 **DART 묶음 에이전트만** 재실행한다. 수정도 실패하면 그 각도는 `수동` + DART 뷰어 링크(`https://dart.fss.or.kr/dsaf001/main.do?rcptNo=<rcept_no>`, 사람이 브라우저로 연다)로 남긴다.
 
 서브에이전트가 없는 환경이면 메인이 같은 템플릿을 자기 절차로 읽고 같은 순서로 **순차** 수행한다 — 서브에이전트는 최적화이지 의존성이 아니다(rationale #12).
 
@@ -52,11 +46,11 @@ python3 <스킬>/scripts/dart_tables.py --emp <artifacts>/dart/empSttus-*.json -
 
 ## 3. 종합
 
-[`references/schema.md`](references/schema.md) 형식으로 `company.md`를 쓴다 — 자료 지도 → 무슨 사업을 하나 → 어떤 인재를 찾나 → 교차점 → open_questions, 이 다섯만 이 순서로. **모든 문장은 출처로 끝난다** — `[출처](url)` 또는 `artifacts/…` 경로. 출처 없는 문장은 본문에 못 들어오고 `open_questions`로 간다. 숫자는 원자료 값 그대로, 계산했으면 두 원값과 식이 보이게. 각도는 섹션이 아니라 출처로만 등장한다.
+[`references/schema.md`](references/schema.md) 형식으로 `company.md`를 쓴다 — 자료 지도 → 무슨 사업을 하나 → 어떤 인재를 찾나 → 교차점 → open_questions, 이 다섯만 이 순서로. **모든 문장은 출처로 끝난다** — `[출처](url)` 또는 `artifacts/…` 경로. 출처 없는 문장은 본문에 못 들어오고 `open_questions`로 간다. 숫자 표기·형태(비교표·라벨 목록·속성표·문단)·각도를 섹션으로 만들지 않는 것은 전부 `schema.md`가 정한다 — 형태는 사실 뭉치의 모양을 보고 사다리에서 고른다.
 
 교차점은 해석이 들어가는 유일한 자리다. **쓰기 전에 사용자에게 보여주고** `schema.md`의 비유도 질문으로 확인받는다 — *"둘째 문장은 직원 추이와 블로그 주제를 제가 이은 해석입니다. 이대로 둘까요, 고칠까요, 뺄까요?"* *"제가 잇지 않은 연결이 보이시나요?"* 사용자가 빼라면 뺀다. 흔들리면 `open_questions`로 내린다.
 
-**완료 조건:** frontmatter 각 필드가 값·`[]`·`~` 중 하나, 5섹션이 순서대로 존재, 출처 없는 문장 0, 지도의 `실패` 행이 `open_questions`에도 있고, frontmatter와 본문의 `open_questions` 항목 수가 같다.
+**완료 조건:** frontmatter 각 필드가 값·`[]`·`~` 중 하나, 5섹션이 순서대로 존재, 출처 없는 문장 0, 교차점 밖에 출처 넷 이상인 문단 0(`schema.md`의 검사 명령), 지도의 `실패` 행이 `open_questions`에도 있고, frontmatter와 본문의 `open_questions` 항목 수가 같다.
 
 ## 4. 마무리
 
