@@ -4,7 +4,7 @@
 
 | 찾는 것 | 위치 |
 |---|---|
-| 용어·도메인 모델 | `docs/rationale.md` #8 |
+| 용어·도메인 모델 | `docs/rationale.md` #9(재료·사건·축)·#7(실마리·각도) |
 | 결정의 근거 (ADR) | `docs/rationale.md`의 "왜 X인가" 절들 |
 | 판정 기준 | `docs/rationale.md` #2 불변 원칙 |
 

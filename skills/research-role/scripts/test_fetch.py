@@ -536,7 +536,7 @@ class FetchCase(unittest.TestCase):
 
     def test_user_agent_header(self):
         req = dart_fetch.build_request("https://opendart.fss.or.kr/api/list.json?crtfc_key=x")
-        self.assertEqual(req.get_header("User-agent"), "add-company/0.1 (+python-urllib)")
+        self.assertEqual(req.get_header("User-agent"), "research-role/0.1 (+python-urllib)")
 
     # --- 캐시 ---
 
@@ -647,7 +647,7 @@ class TablesCase(unittest.TestCase):
         self.assertIn(f"출처: OpenDART empSttus, 사업연도 2024, rcept_no {RCEPT} (결산기준일 2024-12-31)", md)
         self.assertTrue(md.startswith("## 직원 현황\n"))
 
-    def test_fixed_headings_for_schema_anchor(self):
+    def test_fixed_headings_for_role_anchor(self):
         a = self.write("empSttus-2024.json", emp_json("2024"))
         e = self.write("exctvSttus-2024.json", exec_json())
         lines = dart_tables.render([a], e).splitlines()

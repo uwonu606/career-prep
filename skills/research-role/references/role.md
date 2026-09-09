@@ -1,6 +1,8 @@
 # role.md 모양
 
-`career/companies/<slug>/roles/<role>/` 아래 `role.md`와 `artifacts/`(`posting.md`·`findings-*.md`·`dart/`, 원문 그대로). 직무는 회사 아래의 단위다 — 같은 회사에 백엔드 신입·경력이 각각 파일을 갖는다. `~`·`open_questions`·문장마다 출처는 `add-company`와 같은 규약이다.
+`career/companies/<slug>/roles/<role>/` 아래 `role.md`와 `artifacts/`(`posting.md`·`findings-*.md`·`dart/`, 원문 그대로). 직무는 회사 아래의 단위다 — 같은 회사에 백엔드 신입·경력이 각각 파일을 갖는다. 모르는 값은 `~`, 닿지 않은 것은 `open_questions`, 문장마다 출처 — 비워 두는 것이 지어내는 것보다 항상 낫다.
+
+`<slug>`는 영문 kebab이고 그것이 곧 참조 id다. **법인명의 영문 표기를 우선한다** — 회사 홈페이지·공고의 영문 사명이나 DART `company.json`의 `corp_name_eng`가 있으면 거기서(`Kakao Corp.` → `kakao`, `Viva Republica Inc.` → `viva-republica`), 없으면 통용 영문명(`woowa-brothers`). 브랜드명(`toss`, `baemin`)은 slug가 아니다.
 
 아래는 모양이다 — `<…>`는 자리표시이고 어느 값도 조사값이 아니다.
 
@@ -8,7 +10,6 @@
 ---
 id: <role>
 company: <slug>
-company_file: companies/<slug>/company.md   # 없으면 ~
 title: "<공고 제목 원문>"
 job_url: https://<공고 URL>
 date: 2026-09-09

@@ -3,7 +3,7 @@
 
     python3 dart_tables.py --emp empSttus-2024.json [empSttus-2023.json ...] [--exec exctvSttus-2024.json] [--out people-tables.md]
 
-- 헤딩은 고정이다(schema.md 가 앵커로 참조): `## 직원 현황` 아래 연도별 `### YYYY`, `## 임원 현황`.
+- 헤딩은 고정이다(role.md 가 앵커로 참조): `## 직원 현황` 아래 연도별 `### YYYY`, `## 임원 현황`.
 - 직원 현황: 연도 오름차순, 연도마다 표 하나. 원 데이터는 부문(fo_bbm)×성별(sexdstn) 행이라
   부문 단위로 합친다 — 인원(정규직·계약직·합계)은 성별 행을 더하고, 평균근속·1인평균급여는
   더할 수 없으니 "남 x / 여 y" 로 나란히 둔다.

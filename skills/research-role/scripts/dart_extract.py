@@ -36,7 +36,7 @@ PEOPLE_TITLE = re.compile(r"^VIII\.?임원및직원(등)?(에)?관한사항$")
 PEOPLE_SUB_TITLE = re.compile(r"^(1\.?)?임원및직원(등)?의현황$")
 RND = "연구개발"
 
-# 출력 H1 은 이 문자열로 고정한다 — schema.md 가 앵커(#ii-사업의-내용 …)로 참조하므로 원문 제목의
+# 출력 H1 은 이 문자열로 고정한다 — role.md 가 앵커(#ii-사업의-내용 …)로 참조하므로 원문 제목의
 # 표기 차이("임원 및 직원에 관한 사항" 등)가 새면 안 된다. H2 이하는 원문 TITLE 그대로다.
 BUSINESS_HEADING = "II. 사업의 내용"
 PEOPLE_HEADING = "VIII. 임원 및 직원 등에 관한 사항"
