@@ -12,9 +12,9 @@ disable-model-invocation: true
 
 ## 0. 준비
 
-`career/`는 **현재 작업 디렉토리 바로 아래**다(`add-experience`와 같은 규약). 없으면 `career/companies/`만 만든다 — 나머지는 `add-experience`의 것이다.
+데이터 디렉토리에서 실행한다 — 작업 디렉토리에 `career/`가 없으면 `~/.config/career-prep/data-dir`의 경로로 옮긴다(`career-setup/references/layout.md` #0). `career/`·`.env`가 거기 있다. `career/companies/`가 없으면 그것만 만든다 — 나머지는 `add-experience`의 것이다.
 
-키 유무는 `./.env` 파일이 **있는지만** 본다 — 내용은 읽지 않는다(이 환경은 `.env`를 읽는 셸 명령을 권한 규칙으로 거부하고, 키는 스크립트가 스스로 읽는다). 파일이 없으면 발급 URL(https://opendart.fss.or.kr/uss/umt/EgovMberInsertView.do — 개인용 즉시 발급, 무료)을 안내하고 **멈추지 않는다.** 키 없음은 DART 세 각도의 지도 상태(`실패(키 없음)`)로 남을 뿐, 나머지 15각도는 그대로 돈다. 키가 있으면 `python3 <스킬>/scripts/dart_fetch.py "<이름>" --check`가 법인명 확정과 사업보고서 유무를 한 번에 돌려준다(종료 5면 키가 유효하지 않은 것).
+키 유무는 `./.env` 파일이 **있는지만** 본다 — 내용은 읽지 않는다(이 환경은 `.env`를 읽는 셸 명령을 권한 규칙으로 거부하고, 키는 스크립트가 스스로 읽는다). 파일이 없으면 `career-setup` 1단계(발급 URL은 `career-setup/references/layout.md` #2)를 안내하고 **멈추지 않는다.** 키 없음은 DART 세 각도의 지도 상태(`실패(키 없음)`)로 남을 뿐, 나머지 15각도는 그대로 돈다. 키가 있으면 `python3 <스킬>/scripts/dart_fetch.py "<이름>" --check`가 법인명 확정과 사업보고서 유무를 한 번에 돌려준다(종료 5면 키가 유효하지 않은 것).
 
 법인명을 확정한다 — `catalog.md` #1(키가 있으면 위 `--check`가 곧 1번 경로다). 입력은 브랜드명일 수 있고 브랜드명 ≠ 법인명이다(토스 → 비바리퍼블리카). 확정 못 하면 후보 목록을 보여주고 고르게 한다. 지어내서 진행하지 않는다. 확정값은 법인명·브랜드명·corp_code·stock_code·영문명·홈페이지 URL·대표명 — 모르는 것은 `~`.
 

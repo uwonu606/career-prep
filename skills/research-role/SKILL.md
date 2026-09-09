@@ -14,9 +14,9 @@ disable-model-invocation: true
 
 ## 0. 준비
 
-입력은 채용공고 URL 하나다. `career/`는 현재 작업 디렉토리 바로 아래다. `career/companies/<slug>/company.md`가 있으면 법인명·대표명·slug와 `artifacts/`를 재사용한다. 없으면 법인명은 공고와 회사 홈페이지에서 읽고 slug는 법인명 영문 표기다(`add-company/references/schema.md`). `<role>`은 공고 제목의 직무명 영문 kebab + 경력 구분이다 — `product-engineer-newcomer`. 같은 경로가 이미 있으면 그 파일을 갱신한다.
+입력은 채용공고 URL 하나다. 데이터 디렉토리에서 실행한다 — 작업 디렉토리에 `career/`가 없으면 `~/.config/career-prep/data-dir`의 경로로 옮긴다(`career-setup/references/layout.md` #0). `career/`·`.env`·`auth/`가 거기 있다. `ls auth/`로 로그인해 둔 호스트를 적어 둔다(내용은 읽지 않는다). `career/companies/<slug>/company.md`가 있으면 법인명·대표명·slug와 `artifacts/`를 재사용한다. 없으면 법인명은 공고와 회사 홈페이지에서 읽고 slug는 법인명 영문 표기다(`add-company/references/schema.md`). `<role>`은 공고 제목의 직무명 영문 kebab + 경력 구분이다 — `product-engineer-newcomer`. 같은 경로가 이미 있으면 그 파일을 갱신한다.
 
-**완료 조건:** 법인명·slug·`<role>`이 정해졌다.
+**완료 조건:** 법인명·slug·`<role>`이 정해졌고, 로그인해 둔 호스트 목록(비어도 된다)이 있다.
 
 ## 1. 공고와 실마리
 

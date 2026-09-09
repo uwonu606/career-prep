@@ -28,7 +28,7 @@
 
 ## 2. 묶음 ① DART (등급 A — OpenDART 공식 API, 키 필요)
 
-키가 없으면 `D1`로 유무만 확인할 수 있다. 본문 수집(`dart_fetch.py`)은 종료 5(키 없음, 발급 https://opendart.fss.or.kr) → 이 묶음은 `실패`로 보고한다. 필드명은 개발가이드 https://opendart.fss.or.kr/guide/main.do 에서 재확인한다.
+키가 없으면 `D1`로 유무만 확인할 수 있다. 본문 수집(`dart_fetch.py`)은 종료 5(키 없음 — `career-setup/references/layout.md` #2) → 이 묶음은 `실패`로 보고한다. 필드명은 개발가이드 https://opendart.fss.or.kr/guide/main.do 에서 재확인한다.
 
 | # | 각도 | 답하는 질문 | 어디에(예시) | 있는지 확인하는 절차 | 등급 | 주의 |
 |---|---|---|---|---|---|---|
