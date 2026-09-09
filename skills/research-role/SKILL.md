@@ -8,13 +8,13 @@ disable-model-invocation: true
 
 공고 한 장에서 시작해 `career/companies/<slug>/roles/<role>/role.md`에 기록한다. 공고의 줄이 **실마리**가 되고, 실마리가 검색어가 되고, 실마리가 닿지 않은 것만 바깥으로 뻗는다. 사용자에 대해 판정하지 않는다 — 회사가 이 직무에 대해 말한 것만 출처와 함께 적는다(불변 원칙 1).
 
-실마리의 종류와 정체가 드러나는 자리, 뻗는 조건, 에이전트에 넘기는 것은 [`references/leads.md`](references/leads.md)가 정한다. 파일 모양은 [`references/role.md`](references/role.md)다. 접근 등급과 직접 접근 금지 목록은 `add-company/references/catalog.md` #0·#8이 소유한다 — robots·약관을 읽어 판정한 **뒤에** 부른다. 판정과 호출이 한 명령에 있으면 조건문으로 막고, 어겼으면 사용자에게 밝힌다. 로그인 뒤의 페이지는 데이터 디렉토리 `auth/`에 상태 파일이 있는 호스트만 `career-setup/scripts/browser.py open`으로 한 건씩 연다 — 예외 규칙은 catalog #8, 자리는 `career-setup/references/layout.md` #3. 없는 호스트는 링크만 남기고 `career-setup`을 안내한다.
+실마리의 종류와 정체가 드러나는 자리, 뻗는 조건, 에이전트에 넘기는 것은 [`references/leads.md`](references/leads.md)가 정한다. 파일 모양은 [`references/role.md`](references/role.md)다. 접근 등급과 직접 접근 금지 목록은 [`references/access.md`](references/access.md)가 소유한다 — robots·약관을 읽어 판정한 **뒤에** 부른다. 판정과 호출이 한 명령에 있으면 조건문으로 막고, 어겼으면 사용자에게 밝힌다. 로그인 뒤의 페이지는 데이터 디렉토리 `auth/`에 상태 파일이 있는 호스트만 `career-setup/scripts/browser.py open`으로 한 건씩 연다 — 예외 규칙은 `access.md` #2, 자리는 `career-setup/references/layout.md` #3. 없는 호스트는 링크만 남기고 `career-setup`을 안내한다.
 
 막히면(본문을 못 읽음·자료가 없음·접근이 막힘) 그 실마리에 어디까지 갔는지를 적고 다음으로 간다. 세 번 막힌 실마리는 `open_questions`다(불변 원칙 6).
 
 ## 0. 준비
 
-입력은 채용공고 URL 하나다. 데이터 디렉토리에서 실행한다 — 작업 디렉토리에 `career/`가 없으면 `~/.config/career-prep/data-dir`의 경로로 옮긴다(`career-setup/references/layout.md` #0). `career/`·`.env`·`auth/`가 거기 있다. `ls auth/`로 로그인해 둔 호스트를 적어 둔다(내용은 읽지 않는다). `career/companies/<slug>/company.md`가 있으면 법인명·대표명·slug와 `artifacts/`를 재사용한다. 없으면 법인명은 공고와 회사 홈페이지에서 읽고 slug는 법인명 영문 표기다(`add-company/references/schema.md`). `<role>`은 공고 제목의 직무명 영문 kebab + 경력 구분이다 — `product-engineer-newcomer`. 같은 경로가 이미 있으면 그 파일을 갱신한다.
+입력은 채용공고 URL 하나다. 데이터 디렉토리에서 실행한다 — 작업 디렉토리에 `career/`가 없으면 `~/.config/career-prep/data-dir`의 경로로 옮긴다(`career-setup/references/layout.md` #0). `career/`·`.env`·`auth/`가 거기 있다. `ls auth/`로 로그인해 둔 호스트를 적어 둔다(내용은 읽지 않는다). 법인명은 공고와 회사 홈페이지에서 읽고 slug는 법인명 영문 표기다(`role.md`). `<role>`은 공고 제목의 직무명 영문 kebab + 경력 구분이다 — `product-engineer-newcomer`. 같은 경로가 이미 있으면 그 파일을 갱신한다.
 
 **완료 조건:** 법인명·slug·`<role>`이 정해졌고, 로그인해 둔 호스트 목록(비어도 된다)이 있다.
 
@@ -34,14 +34,12 @@ disable-model-invocation: true
 
 ## 3. 뻗기
 
-닿지 않았거나, 닿았는데 크기·방향을 모르는 실마리를 `leads.md` #2 조건표에 댄다. 맞는 행만 판다 — 행당 에이전트 하나, 세기만 하는 행은 `model: haiku`. 회사 파일이 있고 조사일이 6개월 안이면 그 `artifacts/`를 먼저 읽는다. 어느 실마리 때문에 파는지를 적는다. 맞는 행이 없으면 이 단계는 비어 있고 그것도 기록이다.
+닿지 않았거나, 닿았는데 크기·방향을 모르는 실마리를 `leads.md` #2 조건표에 댄다. 맞는 행만 판다 — 행당 에이전트 하나, 세기만 하는 행은 `model: haiku`. 어느 실마리 때문에 파는지를 적는다. 맞는 행이 없으면 이 단계는 비어 있고 그것도 기록이다.
 
 **완료 조건:** 조건표 행마다 "해당 없음" 또는 판 실마리 번호와 findings 경로가 있다.
 
 ## 4. 쓰기
 
 `role.md` 모양으로 쓴다 — 공고와 실마리 / 실마리가 닿은 것 / 공고 밖에서 온 것. 모든 문장은 출처로 끝난다. **공고 밖에서 온 것**만 해석이다 — 공고의 한 줄과 바깥 출처 하나를 이어 "공고만 읽어서는 몰랐을 것"을 적는다. 저장 전에 보여주고 두거나 고치거나 뺄지 묻는다(불변 원칙 3). 닿지 않은 실마리가 frontmatter `open_questions`다.
-
-이 파일을 `add-experience`의 채굴 앵커로 쓰지 않는다(rationale #6).
 
 **완료 조건:** 출처 없는 문장 0, 공고 밖에서 온 것의 항목마다 공고 줄과 바깥 출처가 하나씩, `open_questions`가 닿지 않은 실마리와 같다.
