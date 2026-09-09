@@ -44,6 +44,14 @@
 
 회사가 무슨 사업을 하고 어떤 인재를 찾는지를 **문장마다 출처를 달아** `career/companies/`에 쌓는다. 사용자에 대해 판정하지 않고("맞다/안 맞다"를 쓰지 않는다), 그 결과를 `add-experience`의 채굴 입력으로 흘리지도 않는다([`docs/rationale.md`](docs/rationale.md) #6). 근거는 #17~#22.
 
+지원할 직무의 공고가 있으면:
+
+```
+/research-role <채용공고 URL>          공고에서 출발해 그 직무 주변을 파고, 안 풀리는 질문만 바깥으로 뻗는다
+```
+
+`add-company`와 방향이 반대다 — 그쪽은 회사를 넓게, 여기는 공고 한 장에서 깊게. 공고의 줄마다 **실마리**(팀·제품·기술·사람의 이름과 공고가 답하지 않는 질문)를 뽑아 팀·리더·대표의 말·스택·제품을 파고, 공고만으로 안 풀리는 질문이 남을 때만 DART·전체 공고·뉴스로 뻗는다. 회사 파일이 없어도 돈다. `career/companies/<slug>/roles/<role>/`에 쌓인다. 근거는 #28.
+
 그 회사만 겨눈 것을 만들려면:
 
 ```
@@ -67,6 +75,7 @@ career/
 ├── episodes/<slug>.md
 ├── journal/          일기 — 쓴 날로 나뉜다. frontmatter 없음
 ├── companies/<slug>/{company.md, artifacts/}  회사 조사 — add-company 가 만든다. 원자료(DART 추출·에이전트 반환)는 artifacts/
+│   └── roles/<role>/{role.md, artifacts/}     직무 조사 — research-role 이 만든다. 공고 원문·에이전트 반환은 artifacts/
 └── applications/<slug>/{portfolio.md, artifacts/}  회사×나 — plan-portfolio 가 만든다
 ```
 
@@ -93,6 +102,9 @@ career/
 | `skills/plan-portfolio/` | 회사 하나를 겨눈 만들 것을 정한다 |
 | `└ references/catalog.md` | 문제 각도 14개 × 4묶음 — 회사가 자기 문제를 드러내는 자리, 재현 세 경로, 만들 것이 받을 질문 세 각도 |
 | `└ references/schema.md` | 만들 것 파일 규약 — 문제 지도 / 후보 / 재현 / 만들 것 / open_questions, 등급과 출처가 없으면 후보가 아니다 |
+| `skills/research-role/` | 직무 하나를 공고에서 출발해 조사한다 |
+| `└ references/leads.md` | 실마리 여섯 종류와 정체가 드러나는 자리, 질문 실마리의 네 무늬, 뻗는 조건 다섯, 에이전트에 넘기는 것과 반환 형식 |
+| `└ references/role.md` | 직무 파일 모양 — 공고와 실마리 / 실마리가 닿은 것 / 공고 밖에서 온 것, 실마리 줄이 곧 상태 |
 | `docs/rationale.md` | 설계 근거 — 뒤집기 전에 읽을 것 |
 | `docs/market-research.md` | 채용 프로세스 모델의 근거와 출처 |
 | `docs/company-research.md` | 회사 조사 소스·파서 실측 — robots·약관 판정, 사업보고서 XML 구조, 첫 수정 루프 |
@@ -106,7 +118,7 @@ career/
 npx skills add uwonu606/career-prep
 ```
 
-Claude Code에서는 플러그인으로 설치하면 `agents/tech-interviewer.md`까지 함께 들어간다. 그 밖의 환경에서는 `skills/` 다섯만 들어가고, 검증은 새 대화로 격리한다.
+Claude Code에서는 플러그인으로 설치하면 `agents/tech-interviewer.md`까지 함께 들어간다. 그 밖의 환경에서는 `skills/` 여섯만 들어가고, 검증은 새 대화로 격리한다.
 
 `add-company`의 DART 각도(공시 문서·직원 현황·임원)는 OpenDART 인증키가 있을 때 돈다 — 개인용 즉시 발급, 무료. 작업 디렉토리의 `.env`에 `DART_API_KEY=…` 한 줄로 두면 스크립트만 그것을 읽는다(대화나 셸 명령에 키가 나오지 않는다). 키가 없어도 나머지 15각도는 그대로 돈다.
 
