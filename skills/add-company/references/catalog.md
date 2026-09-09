@@ -28,7 +28,7 @@
 
 ## 2. 묶음 ① DART (등급 A — OpenDART 공식 API, 키 필요)
 
-키가 없으면 `D1`로 유무만 확인할 수 있다. 본문 수집(`dart_fetch.py`)은 종료 5(키 없음, 발급 https://opendart.fss.or.kr) → 이 묶음은 `실패`로 보고한다. 필드명은 개발가이드 https://opendart.fss.or.kr/guide/main.do 에서 재확인한다.
+키가 없으면 `D1`로 유무만 확인할 수 있다. 본문 수집(`dart_fetch.py`)은 종료 5(키 없음 — `career-setup/references/layout.md` #2) → 이 묶음은 `실패`로 보고한다. 필드명은 개발가이드 https://opendart.fss.or.kr/guide/main.do 에서 재확인한다.
 
 | # | 각도 | 답하는 질문 | 어디에(예시) | 있는지 확인하는 절차 | 등급 | 주의 |
 |---|---|---|---|---|---|---|
@@ -62,7 +62,7 @@ RSS(글 목록을 기계가 읽게 내보내는 피드)를 프로빙하기 전�
 |---|---|---|---|---|---|---|
 | 4 | 회사 자체 소개 | 무엇을 팔고 스스로 어떻게 말하나 — 제품·서비스 라인업, 보도자료, 회사 소개 | 회사 홈페이지 | URL은 `company.json`의 `hm_url`(키) 또는 WebSearch "<법인명> 공식 홈페이지". 그 도메인 `/robots.txt`를 읽고 `H1`로 HTML을 **1회** 받아 둔다 — 5·7·13의 링크는 이 파일에서 찾는다 | A(1회 fetch) | 거의 항상 있음. 두 번 받지 않는다 |
 | 5 | 채용공고 **전체** | 지금 어떤 사람을 얼마나 뽑나 — 여는 포지션 전부의 직무·요구 스택 분포 | 회사 채용 페이지 · 채용 플랫폼(원티드·점핏·사람인·잡코리아) | 4의 HTML에서 `H2` — href에 `(career\|recruit\|jobs\|채용)` grep, 3/3 성공 ①(careers.kakao.com / toss.im/career/jobs / career.woowahan.com). 없으면 WebSearch "<법인명> 채용". 플랫폼 공고는 WebSearch 결과로만 | A(링크 발견)→B | 서브도메인 프로빙은 1/3이라 쓰지 않는다 ①. 플랫폼 직접 호출 금지(#8). 사용자가 준 공고 URL은 WebFetch. **이 각도만 전체 수집**. H2는 채용 사이트 루트만 주므로 목록 URL은 루트 WebFetch 1건 또는 `site:<채용도메인>` WebSearch로 확정. 채용 사이트가 JS 셸이면(WebFetch에 제목만, 카카오 실측 ①) 목록은 `site:` 검색으로 보완하고, 관계사 공고가 같은 목록에 섞이면(카카오 S-xxxx ①) 묶음 ②에서 법인명으로 걸러라. **JS 셸이면 그 도메인 robots.txt의 `Sitemap:` 줄을 먼저 본다** — 에이피알은 사이트맵에 job_posting URL 72건이 있어 목록 전체를 얻었고 각 페이지는 `__NEXT_DATA__`에 직군·경력·고용·마감 필드를 담고 있었다(2026-09-06 ①). robots `*` 허용 경로만, 식별 UA, 1.5초 간격 |
-| 6 | 채용 브랜딩 | 어떤 사람을 원한다고 말하나 — 인재상·조직문화·팀 소개·복지 | 5의 채용 사이트 안 | 5에서 찾은 채용 사이트를 WebFetch해 인재상·문화·팀·복지 페이지 링크가 있으면 있음 | B | 채용 사이트가 없으면 4의 회사 소개 페이지로 대체. WebFetch가 JS 셸이면 `site:<채용도메인> 인재상 OR 문화 OR 팀` WebSearch로 보완 — `없음` 판정은 그 뒤에 ① |
+| 6 | 채용 브랜딩 | 어떤 사람을 원한다고 말하나 — 인재상·조직문화·팀 소개·복지 | 5의 채용 사이트 안 | 5에서 찾은 채용 사이트를 WebFetch해 인재상·문화·팀·복지 페이지 링크가 있으면 있음 | B | 채용 사이트가 없으면 4의 회사 소개 페이지로 대체. WebFetch가 JS 셸이면 `site:<채용도메인> 인재상 OR 문화 OR 팀` WebSearch로 보완 — `없음` 판정은 그 뒤에 ①. 검색으로도 항목 본문이 안 나오면 그 도메인 robots를 `R0`로 판정한 뒤 `career-setup/scripts/browser.py open <url> --no-auth`로 **한 페이지만** 헤드리스 렌더한다 — 로그인이 필요 없는 페이지에도 쓸 수 있고 등급은 회사 홈페이지 1회 fetch와 같다(robots 허용이 전제). 에이피알 `/culture`가 WebFetch·검색 둘 다 소개문만 주다가 이 방법으로 미션·비전·인재상 정의 원문이 나왔다 ①(2026-09-09). 그래도 안 나오는 항목은 이미지 게재다 — 이미지 CDN은 #8을 따라 링크만 |
 | 7 | 기술블로그 | 실제 스택, 푸는 문제, 엔지니어링 문화 | 자체 테크블로그 · Medium (toss.tech, techblog.woowahan.com, tech.kakao.com, d2.naver.com, medium.com/daangn, blog.banksalad.com) | 4의 HTML href 중 **호스트명**에 `tech`·`blog`가 들거나 `medium.com`인 링크(경로만 맞는 `/page/service/tech` 같은 제품 페이지는 오탐 ①) → 없으면 각도 9의 GitHub org `blog` 필드(kakao→tech.kakao.com ①) → `R0`로 그 도메인 robots 확인 → `R1` RSS 경로 프로빙 `/rss.xml, /feed/, /feed.xml, /atom.xml, /index.xml`, Medium이면 `medium.com/feed/<handle>` — 9곳 중 6 성공 ①. 못 찾으면 WebSearch "<법인명> 기술 블로그" 보완 | A(RSS 1회)→B | 실패 사례 LINE·컬리 403, 쏘카는 경로가 다름 ① → 블로그 URL만 적고 `수동` |
 | 8 | 컨퍼런스 발표 | 공개적으로 자랑하는 기술 문제 | 자체·업계 컨퍼런스(if kakao, SLASH, 우아콘, DEVIEW, NDC) | WebSearch "<법인명 또는 브랜드> 컨퍼런스 발표" — 발표 목록 페이지 링크가 나오면 있음 | B | **YouTube 페이지 직접 fetch 금지**(약관 ②, #8). 회사→컨퍼런스 URL은 연도 패턴·JS 렌더라 프로빙하지 않고 WebSearch |
 | 9 | 오픈소스 | 무엇을 공개하고 어떤 언어를 쓰나 — GitHub 조직의 리포·언어·활동 | GitHub 조직 | `G1` `search/users?q=<영문명>+type:org` → 후보마다 `G2` `orgs/<login>`의 `blog`가 회사 도메인과 일치하면 확정 ①(kakao→tech.kakao.com, toss→toss.im, woowabros→woowahan.com) | A | 영문명 필수 — 한글 검색은 0건 ①(`corp_name_eng` 또는 홈페이지에서). 동명 org 주의: `woowahan`은 빈 껍데기, 진짜는 `woowabros` ①. 무키 한도 core 60건/시·search 10건/분 |
@@ -152,7 +152,7 @@ curl -sS -A "$UA" "https://api.github.com/orgs/<login>" | python3 -c "import jso
 
 ## 8. 직접 접근 금지 목록
 
-**규칙**: 직접 접근(스크립트·curl·WebFetch로 그 서버를 부르는 것)은 등급 A만. **robots 허용 ≠ 약관 허용** — 확인한 4곳 중 2곳(빅카인즈·YouTube)이 robots는 허용인데 약관이 금지였다 ②. 등급 A 확정 소스: OpenDART API(약관 제10조 허용량 내, 제11조 무료 ②) · DART `detailSearch.ax`(robots 미언급=허용, 사이트 약관 없음, 금감원 저작권정책 "비영리 개인 이용 자유" ②) · GitHub REST API(공식) · 회사 홈페이지 1회 fetch(그 도메인 robots 확인 후).
+**규칙**: 직접 접근(스크립트·curl·WebFetch로 그 서버를 부르는 것)은 등급 A만. **robots 허용 ≠ 약관 허용** — 확인한 4곳 중 2곳(빅카인즈·YouTube)이 robots는 허용인데 약관이 금지였다 ②. 등급 A 확정 소스: OpenDART API(약관 제10조 허용량 내, 제11조 무료 ②) · DART `detailSearch.ax`(robots 미언급=허용, 사이트 약관 없음, 금감원 저작권정책 "비영리 개인 이용 자유" ②) · GitHub REST API(공식) · 회사 홈페이지 1회 fetch(그 도메인 robots 확인 후). **예외는 사용자의 로그인이다** — 사용자가 `career-setup`으로 로그인해 둔 호스트(데이터 디렉토리 `auth/<host>.json`, `career-setup/references/layout.md` #3)는 그 계정으로 `career-setup/scripts/browser.py open` 한 페이지씩 열 수 있고, 출처 뒤에 `규칙 예외(auth)`를 적는다. 등급은 그대로다 — 로그인 ≠ 약관 허용. 목록 순회는 없다. 에지 차단(잡플래닛·블라인드·원티드)은 로그인 없는 헤드리스로 403이었고 ① 로그인 상태로는 미확인 ③.
 
 아래 소스는 WebSearch 결과와 링크만 쓴다. WebFetch도 하지 않는다.
 

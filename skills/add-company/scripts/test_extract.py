@@ -5,7 +5,7 @@
     python3 -m unittest test_extract        # scripts/ 디렉토리에서
 
 픽스처 디렉토리는 인자 > $ADD_COMPANY_FIXTURES 로 정한다. 둘 다 없으면 픽스처 테스트는 건너뛰고(합성 테스트만 돈다)
-이유를 출력한다 — 픽스처(타사 공시 원문, 수십 MB)는 이 공개 리포 밖에 두고 setup 스킬이 위치를 정한다.
+이유를 출력한다 — 픽스처(타사 공시 원문, 수십 MB)는 이 공개 리포 밖에 두고 career-setup 스킬이 위치를 정한다.
 기대값은 픽스처 옆 expect.json — 파일명 → {"ii_subsections", "viii_subsections", "has_rnd"}.
 픽스처를 추가하면 expect.json 에도 한 줄 넣어야 한다(없으면 여기서 실패한다).
 """
