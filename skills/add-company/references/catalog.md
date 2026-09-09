@@ -152,7 +152,7 @@ curl -sS -A "$UA" "https://api.github.com/orgs/<login>" | python3 -c "import jso
 
 ## 8. 직접 접근 금지 목록
 
-**규칙**: 직접 접근(스크립트·curl·WebFetch로 그 서버를 부르는 것)은 등급 A만. **robots 허용 ≠ 약관 허용** — 확인한 4곳 중 2곳(빅카인즈·YouTube)이 robots는 허용인데 약관이 금지였다 ②. 등급 A 확정 소스: OpenDART API(약관 제10조 허용량 내, 제11조 무료 ②) · DART `detailSearch.ax`(robots 미언급=허용, 사이트 약관 없음, 금감원 저작권정책 "비영리 개인 이용 자유" ②) · GitHub REST API(공식) · 회사 홈페이지 1회 fetch(그 도메인 robots 확인 후).
+**규칙**: 직접 접근(스크립트·curl·WebFetch로 그 서버를 부르는 것)은 등급 A만. **robots 허용 ≠ 약관 허용** — 확인한 4곳 중 2곳(빅카인즈·YouTube)이 robots는 허용인데 약관이 금지였다 ②. 등급 A 확정 소스: OpenDART API(약관 제10조 허용량 내, 제11조 무료 ②) · DART `detailSearch.ax`(robots 미언급=허용, 사이트 약관 없음, 금감원 저작권정책 "비영리 개인 이용 자유" ②) · GitHub REST API(공식) · 회사 홈페이지 1회 fetch(그 도메인 robots 확인 후). **예외는 사용자의 로그인이다** — 사용자가 `career-setup`으로 로그인해 둔 호스트(데이터 디렉토리 `auth/<host>.json`, `career-setup/references/layout.md` #3)는 그 계정으로 `career-setup/scripts/browser.py open` 한 페이지씩 열 수 있고, 출처 뒤에 `규칙 예외(auth)`를 적는다. 등급은 그대로다 — 로그인 ≠ 약관 허용. 목록 순회는 없다. 에지 차단(잡플래닛·블라인드·원티드)은 로그인 없는 헤드리스로 403이었고 ① 로그인 상태로는 미확인 ③.
 
 아래 소스는 WebSearch 결과와 링크만 쓴다. WebFetch도 하지 않는다.
 

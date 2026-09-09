@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 공고 한 장에서 시작해 `career/companies/<slug>/roles/<role>/role.md`에 기록한다. 공고의 줄이 **실마리**가 되고, 실마리가 검색어가 되고, 실마리가 닿지 않은 것만 바깥으로 뻗는다. 사용자에 대해 판정하지 않는다 — 회사가 이 직무에 대해 말한 것만 출처와 함께 적는다(불변 원칙 1).
 
-실마리의 종류와 정체가 드러나는 자리, 뻗는 조건, 에이전트에 넘기는 것은 [`references/leads.md`](references/leads.md)가 정한다. 파일 모양은 [`references/role.md`](references/role.md)다. 접근 등급과 직접 접근 금지 목록은 `add-company/references/catalog.md` #0·#8이 소유한다 — robots·약관을 읽어 판정한 **뒤에** 부른다. 판정과 호출이 한 명령에 있으면 조건문으로 막고, 어겼으면 사용자에게 밝힌다.
+실마리의 종류와 정체가 드러나는 자리, 뻗는 조건, 에이전트에 넘기는 것은 [`references/leads.md`](references/leads.md)가 정한다. 파일 모양은 [`references/role.md`](references/role.md)다. 접근 등급과 직접 접근 금지 목록은 `add-company/references/catalog.md` #0·#8이 소유한다 — robots·약관을 읽어 판정한 **뒤에** 부른다. 판정과 호출이 한 명령에 있으면 조건문으로 막고, 어겼으면 사용자에게 밝힌다. 로그인 뒤의 페이지는 데이터 디렉토리 `auth/`에 상태 파일이 있는 호스트만 `career-setup/scripts/browser.py open`으로 한 건씩 연다 — 예외 규칙은 catalog #8, 자리는 `career-setup/references/layout.md` #3. 없는 호스트는 링크만 남기고 `career-setup`을 안내한다.
 
 막히면(본문을 못 읽음·자료가 없음·접근이 막힘) 그 실마리에 어디까지 갔는지를 적고 다음으로 간다. 세 번 막힌 실마리는 `open_questions`다(불변 원칙 6).
 

@@ -48,7 +48,7 @@ DART는 `add-company/scripts/`의 셋(`dart_fetch.py` → `dart_extract.py` → 
 
 넘기는 것: 그 묶음의 실마리(번호·종류·내용·온 줄) · 공고 구조화 전문 · 법인명·브랜드명·대표명 · 이 파일과 `add-company/references/catalog.md`의 절대 경로 · `artifacts/` 절대 경로 · 조사일 · 로그인해 둔 호스트 목록과 `career-setup/scripts/browser.py`의 절대 경로(데이터 디렉토리에서 실행한다). 뻗기에는 조건표의 행과 그 행을 연 실마리, 재사용할 회사 `artifacts/` 경로를 더한다.
 
-에이전트가 하는 것: 실마리마다 #1의 자리를 찾아 닿은 문장을 **인용**으로 옮기고 출처를 단다. 해석은 메인의 일이다. 직접 접근은 `add-company/references/catalog.md` #0의 등급 A와 사용자가 준 URL·검색 결과 링크(1건씩)만, 판정을 본 뒤에. git 명령을 쓰지 않고, 파일은 `artifacts/dart/` 산출만 만든다.
+에이전트가 하는 것: 실마리마다 #1의 자리를 찾아 닿은 문장을 **인용**으로 옮기고 출처를 단다. 해석은 메인의 일이다. 직접 접근은 `add-company/references/catalog.md` #0의 등급 A와 사용자가 준 URL·검색 결과 링크(1건씩)만, 판정을 본 뒤에. 로그인 뒤의 페이지는 호스트가 목록에 있을 때만 `browser.py open` 1건이고, 출처 뒤에 `규칙 예외(auth)`를 적는다(catalog #8). git 명령을 쓰지 않고, 파일은 `artifacts/dart/` 산출만 만든다.
 
 반환 형식 — 메인이 편집 없이 저장한다:
 
