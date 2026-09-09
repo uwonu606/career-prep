@@ -55,19 +55,20 @@ cache/repos/<slug>/                                        원격 리포의 클�
 | | |
 |---|---|
 | `skills/extract-repo/` | 저장소 하나에서 재료를 뽑는다 |
-| `└ references/axes.md` | 축 일곱과 어디에 남나, 사건으로 묶는 규칙, 칸 일곱, 누구의 것을 뽑나 |
-| `└ references/files.md` | `repo.md`·`candidates.md` 모양 |
+| `└ references/repo.md` | `repo.md` 모양 — 리포 한 장의 frontmatter와 절 여섯 |
+| `└ references/candidates.md` | 축 일곱과 어디에 남나, 사건으로 묶는 규칙, 칸 일곱, 누구의 것을 뽑나, `candidates.md` 모양 |
 | `└ scripts/repo_facts.py` | git 사실을 `summary.json`·`commits.json`으로. 표준 라이브러리 + git |
 | `└ scripts/test_repo_facts.py` | 출력 형식 테스트 — 임시 저장소를 만들어 돈다 |
 | `skills/research-role/` | 직무 하나를 공고에서 출발해 조사한다 |
-| `└ references/leads.md` | 실마리 여섯 종류와 정체가 드러나는 자리, 질문 실마리의 네 무늬, 뻗는 조건 다섯, 에이전트에 넘기는 것과 반환 형식 |
+| `└ references/leads.md` | 실마리 여섯 종류와 정체가 드러나는 자리, 질문 실마리의 네 무늬, 깊이, 에이전트에 넘기는 것과 반환 형식 |
 | `└ references/role.md` | 직무 파일 모양 — 공고와 실마리 / 실마리가 닿은 것 / 공고 밖에서 온 것, 실마리 줄이 곧 상태. slug 규칙 |
-| `└ references/access.md` | 접근 등급(robots 허용 AND 약관 무금지만 직접 접근), 직접 접근 금지 목록, 로그인 예외 |
-| `└ references/angles.md` | 뻗기 각도 일곱 — 각도별 절차, 명령 블록(DART 유무 확인·robots 판정·홈페이지 1회 fetch) |
+| `└ references/extend.md` | 뻗는 조건 다섯과 조건마다의 절차 — DART 세 명령, 전체 공고 수집, 뉴스·IR, 채용 프로세스, 평판 |
+| `└ references/access.md` | 접근 등급(robots 허용 AND 약관 무금지만 직접 접근), 로그인 예외, 링크만 쓰는 소스 |
 | `└ scripts/dart_fetch.py` `dart_extract.py` `dart_tables.py` | OpenDART 수집(키는 스크립트만 읽는다) · 사업보고서 원문 절 추출 · 직원·임원 표. 표준 라이브러리만 |
-| `└ scripts/test_extract.py` `test_fetch.py` | 파서 회귀(픽스처는 리포 밖, `ADD_COMPANY_FIXTURES`) · 수집기 합성 응답 테스트 |
+| `└ scripts/robots_check.py` | 호스트의 robots.txt 를 받아 경로마다 허용/차단을 찍고 전부 허용일 때만 종료 0 — `&&` 로 fetch 를 막는다 |
+| `└ scripts/test_extract.py` `test_fetch.py` `test_robots_check.py` | 파서 회귀(픽스처는 리포 밖, 경로를 인자로) · 수집기 합성 응답 · robots 판정 테스트 |
 | `skills/career-setup/` | 데이터 디렉토리·키·로그인 상태를 준비한다 |
-| `└ references/layout.md` | 데이터 디렉토리의 자리 — `career/`·`cache/`·`.env`·`auth/`·`fixtures/`, 키 표, 로그인 상태 규약, GitHub 로그인 |
+| `└ references/layout.md` | 데이터 디렉토리의 자리 표(`career/`·`cache/`·`.env`·`auth/`·`fixtures/`·`gh` 로그인), 키 표(여는 것·발급·확인), 로그인 상태 파일 규약 |
 | `└ scripts/browser.py` | `login`(창에서 로그인해 상태 저장) · `list` · `open`(그 상태로 페이지 하나 읽기). `uv run` |
 | `docs/rationale.md` | 설계 근거 — 뒤집기 전에 읽을 것 |
 | `docs/research/appeal-criteria/` | 무엇이 소재가 되나 — 2026-09 공고 원문 20건과 출처 26건, 리포에서 뽑을 수 있는 증거 표 |
@@ -84,7 +85,7 @@ npx skills add uwonu606/career-prep
 
 어느 환경에서든 `skills/` 셋이 들어간다.
 
-처음 한 번 개인 데이터 디렉토리에서 `/career-setup`을 돈다 — `career/`·키(`.env`)·로그인 상태(`auth/`)가 거기 생기고 `gh` 로그인을 확인하며, 무엇이 어디에 있는지는 [`skills/career-setup/references/layout.md`](skills/career-setup/references/layout.md)가 정한다. 키와 로그인 상태의 내용은 스크립트만 읽는다(대화나 셸 명령에 나오지 않는다). OpenDART 키가 없으면 `research-role` 뻗기의 DART 행만 비고, `gh` 로그인이 없으면 `extract-repo`가 비공개 리포와 PR·이슈만 못 읽고 나머지는 그대로 돈다.
+처음 한 번 개인 데이터 디렉토리에서 `/career-setup`을 돈다 — `career/`·키(`.env`)·로그인 상태(`auth/`)가 거기 생기고 `gh` 로그인을 확인하며, 무엇이 어디에 있는지는 [`skills/career-setup/references/layout.md`](skills/career-setup/references/layout.md)가 정한다. 키와 로그인 상태의 내용은 스크립트만 읽는다(대화나 셸 명령에 나오지 않는다). 키나 `gh` 로그인을 안 둬도 나머지는 그대로 돈다 — 그 자리가 여는 것만 빈다.
 
 ## 불변 원칙
 
