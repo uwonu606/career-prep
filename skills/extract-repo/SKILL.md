@@ -1,23 +1,23 @@
 ---
 name: extract-repo
-description: 저장소 하나(로컬 디렉토리 또는 원격 주소)에서 자소서·이력서·포트폴리오의 소재가 될 수 있는 모든 것을 근거와 함께 재료로 뽑아 career/repos/<slug>/ 에 쌓는다. 실행 중 묻지 않는다.
+description: 저장소 하나(로컬 디렉토리 또는 원격 주소)를 끝까지 읽어 자소서·이력서·포트폴리오의 소재가 될 수 있는 모든 것을 근거와 함께 재료로 적는다. career/repos/<slug>/ 에 쌓이고, 실행 중 묻지 않는다.
 disable-model-invocation: true
 ---
 
 # 저장소에서 재료 뽑기
 
-리포를 끝까지 읽고 **소재가 될 가능성이 있는 것을 전부** 재료로 적는다. 고르지 않고 순위를 매기지 않는다 — 고르는 일은 별도다. 실행은 한 번에 끝까지 가고, 리포로 못 밝힌 것은 `확인 필요` 칸에 적는다.
+리포를 끝까지 읽고 소재가 될 가능성이 있는 것을 **전부** 재료로 적는다. 고르는 일은 이 스킬 뒤의 일이라 애매한 것도 적는다. 리포로 못 밝힌 것은 `확인 필요` 칸에 적고 끝까지 간다.
 
-파일 모양은 [`references/files.md`](references/files.md), 축과 칸은 [`references/axes.md`](references/axes.md)가 정한다. `<스킬>`은 이 `SKILL.md`가 있는 디렉토리의 절대 경로다.
+리포 한 장의 모양은 [`references/repo.md`](references/repo.md), 재료의 축·사건·칸과 `candidates.md`의 모양은 [`references/candidates.md`](references/candidates.md)가 정한다. `<스킬>`은 이 `SKILL.md`가 있는 디렉토리의 절대 경로다.
 
 ## 0. 자리
 
-입력은 리포 하나 — 로컬 디렉토리 경로 또는 원격 주소. 데이터 디렉토리에서 실행한다 — 작업 디렉토리에 `career/`가 없으면 `~/.config/career-prep/data-dir`의 경로로 옮긴다(`career-setup/references/layout.md` #0).
+입력은 리포 하나 — 로컬 디렉토리 경로 또는 원격 주소. 데이터 디렉토리에서 실행한다(`career-setup/references/layout.md` #0). `<slug>`는 원격이면 `<owner>-<repo>` 소문자, 로컬뿐이면 디렉토리 이름이다.
 
-- **원격**이면 `gh repo clone <url> cache/repos/<slug>`로 받고, 이미 있으면 `git -C cache/repos/<slug> fetch -q && git -C cache/repos/<slug> pull -q --ff-only`. `gh auth status`가 실패하면 공개 리포만 `git clone`으로 받고 PR·이슈 단계는 `확인 필요`로 남긴다.
+- **원격**이면 `gh repo clone <url> cache/repos/<slug>`로 받고, 이미 있으면 `git -C cache/repos/<slug> pull -q --ff-only`. `gh auth status`가 실패하면 공개 리포만 `git clone`으로 받고 PR·이슈 단계는 `확인 필요`로 남긴다.
 - **로컬**이면 그 디렉토리가 리포다. `git remote get-url origin`이 GitHub 주소면 원격과 같이 `gh`를 쓴다.
 
-`career/repos/<slug>/artifacts/{git,gh}/`를 만든다. `repo.md`가 이미 있으면 `identities`·`gh_login`·`last_commit`을 읽어 둔다 — 이번 실행은 그 커밋 뒤만 훑고 재료를 덧붙인다.
+`career/repos/<slug>/artifacts/{git,gh}/`를 만든다. `repo.md`가 이미 있으면 `identities`·`gh_login`·`last_commit`을 읽어 둔다 — 이번 실행은 그 커밋 뒤만 훑어 덧붙인다.
 
 **완료 조건:** 리포 디렉토리에서 `git rev-parse HEAD`가 나오고, `artifacts/git/`·`artifacts/gh/`가 있다.
 
@@ -33,7 +33,7 @@ disable-model-invocation: true
 python3 <스킬>/scripts/repo_facts.py <리포> --out career/repos/<slug>/artifacts/git [--since <last_commit>] --author <이메일>...
 ```
 
-`summary.json`(기간·저자·태그·파일 분포·CI·테스트·에이전트 설정·evals·배포 표지)과 `commits.json`(커밋마다 본문·트레일러·바뀐 파일·되돌림·본인 여부·건드린 영역)이 생긴다. 종료 2면 stderr의 이유를 고치고 다시 돈다.
+`summary.json`(리포 한 장의 사실과 흔적 표지)과 `commits.json`(커밋마다 본문·트레일러·바뀐 파일·되돌림·본인 여부)이 생긴다.
 
 `gh`가 되면 같은 자리의 `gh/`에 받는다. `<owner/repo>`는 `gh repo view --json nameWithOwner -q .nameWithOwner`다.
 
@@ -42,23 +42,21 @@ gh pr list -R <owner/repo> --state all --limit 500 --json number,title,body,auth
 gh issue list -R <owner/repo> --state all --limit 500 --json number,title,body,author,createdAt,closedAt,state,labels,comments,url > career/repos/<slug>/artifacts/gh/issues.json
 ```
 
-본인이 저자이거나 리뷰어인 PR 중 `reviews`나 `comments`가 있는 것은 인라인 리뷰도 받는다 — `gh api --paginate repos/<owner/repo>/pulls/<n>/comments > career/repos/<slug>/artifacts/gh/reviews/<n>.json`. 리뷰 대화는 코드에 안 남는 판단의 흔적이라 재료의 값이 크다.
+본인이 저자이거나 리뷰어인 PR 중 `reviews`나 `comments`가 있는 것은 인라인 리뷰도 받는다 — `gh api --paginate repos/<owner/repo>/pulls/<n>/comments > career/repos/<slug>/artifacts/gh/reviews/<n>.json`.
 
 **완료 조건:** `artifacts/git/summary.json`·`commits.json`이 있고, `gh`가 되는 리포면 `gh/prs.json`·`gh/issues.json`이 있고 리뷰가 있는 본인 PR마다 `gh/reviews/<n>.json`이 있다.
 
 ## 3. 리포 한 장
 
-`repo.md`를 `files.md` 모양으로 쓴다. `summary.json`의 `readme_head`·매니페스트·파일 분포·저자·태그와, 리포의 README·`docs/`·도메인 코드를 직접 열어 채운다. 도메인 용어는 코드에서 이름으로 쓰인 것만 표에 올리고 경로를 단다. 모르는 값은 `~`로 두고 `## 확인 필요`에 한 줄.
+`repo.md`를 `references/repo.md` 모양으로 쓴다. `summary.json`의 `readme_head`·매니페스트·파일 분포·저자·태그와, 리포의 README·`docs/`·도메인 코드를 직접 열어 채운다. 도메인 용어는 코드에서 이름으로 쓰인 것만 표에 올리고 경로를 단다.
 
 **완료 조건:** 절 여섯이 다 있고, 절마다 근거(경로·번호)가 붙었거나 `없음`·`~`가 적혔고, frontmatter의 `identities`·`gh_login`·`scanned_at`이 채워졌다.
 
 ## 4. 재료
 
-`commits.json`·`prs.json`·`issues.json`·`reviews/`를 읽고 `axes.md` #2대로 **사건**으로 묶는다. 사건마다 리포의 실제 파일·diff(`git -C <리포> show <sha>`)를 열어 `axes.md` #3의 칸 일곱을 채우고 `candidates.md`의 해당 축 절에 적는다.
+`commits.json`·`prs.json`·`issues.json`·`reviews/`를 읽고 `candidates.md` #2대로 **사건**으로 묶는다. 사건마다 리포의 실제 파일·diff(`git -C <리포> show <sha>`)를 열어 #3의 칸 일곱을 채우고 해당 축 절에 적는다. 축 일곱은 #1의 "어디에 남나"를 전부 대어 훑고, 누구의 것을 뽑는지는 #4다.
 
-축 일곱은 `axes.md` #1의 "어디에 남나"를 전부 대어 훑는다 — 재료가 안 나온 축은 `없음 — <무엇을 봤는지>`. 누구의 것을 뽑는지와 `함께 한 것` 절은 `axes.md` #4.
-
-한 사건이 소재가 될지 애매하면 **적는다** — 거르는 것은 이 스킬의 일이 아니고, 축 `그 밖`이 그 자리다. 이전 실행이 있으면 번호는 `count + 1`부터 잇고 기존 건은 손대지 않는다.
+이전 실행이 있으면 번호는 `count + 1`부터 잇고 기존 건은 그대로 둔다.
 
 **완료 조건:** 절 여덟(축 일곱 + 함께 한 것)이 다 있고, 재료마다 근거가 하나 이상 있고, 본인 커밋(`mine: true`)과 본인 PR·이슈 전부가 어느 재료의 근거에 들어갔거나 `그 밖`에 적혔고, `count`와 `C<n>`의 마지막 번호가 같다.
 
