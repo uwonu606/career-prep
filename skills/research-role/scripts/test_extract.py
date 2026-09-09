@@ -96,7 +96,7 @@ class FixtureTests(unittest.TestCase):
                 self.assertNotIn("임원의 보수", people.split("\n", 3)[2])
 
     def test_heading_format(self):
-        """schema.md 가 앵커로 참조하는 형식: H1 은 고정 문자열, H2 는 하위 절 원문 TITLE 그대로."""
+        """role.md 가 앵커로 참조하는 형식: H1 은 고정 문자열, H2 는 하위 절 원문 TITLE 그대로."""
         for xml in self.xmls:
             with self.subTest(fixture=xml.name):
                 root = dx.load(xml)

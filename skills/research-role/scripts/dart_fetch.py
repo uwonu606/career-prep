@@ -40,7 +40,7 @@ from pathlib import Path
 
 BASE = "https://opendart.fss.or.kr/api/"
 KEY_URL = "https://opendart.fss.or.kr/uss/umt/EgovMberInsertView.do"
-USER_AGENT = "add-company/0.1 (+python-urllib)"
+USER_AGENT = "research-role/0.1 (+python-urllib)"
 DELAY = 0.5        # 요청 간 간격(초)
 CACHE_DAYS = 7     # corpCode.zip 재다운로드 주기
 LIST_YEARS = 3     # list.json 검색 기간(년)
@@ -392,7 +392,7 @@ def parse_args(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("query", help="법인명(정확일치, 브랜드명 아님) 또는 corp_code 8자리")
     mode = ap.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--out", type=Path, help="산출 디렉토리(예: career/companies/<slug>/artifacts/dart)")
+    mode.add_argument("--out", type=Path, help="산출 디렉토리(예: career/companies/<slug>/roles/<role>/artifacts/dart)")
     mode.add_argument("--check", action="store_true",
                       help="내려받지 않고 최근 3년 사업보고서(A001)·감사보고서(F001) 건수만 stdout 한 줄로. A001 0건이면 종료 2")
     ap.add_argument("--years", type=int, default=5, help="empSttus 를 받을 최근 사업연도 수(기본 5)")
@@ -413,7 +413,7 @@ def main(argv=None, fetch_bytes=http_get, sleep=time.sleep, env=None, cwd=None, 
             file=sys.stderr,
         )
         return EXIT_NO_KEY
-    cache_dir = Path(env.get("ADD_COMPANY_CACHE") or Path.home() / ".cache" / "add-company")
+    cache_dir = Path(env.get("ADD_COMPANY_CACHE") or Path.home() / ".cache" / "career-prep")
     client = Client(key, fetch_bytes=fetch_bytes, sleep=sleep)
     try:
         if args.check:
