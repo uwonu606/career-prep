@@ -2,16 +2,17 @@
 
 [![test](https://github.com/uwonu606/career-prep/actions/workflows/test.yml/badge.svg)](https://github.com/uwonu606/career-prep/actions/workflows/test.yml)
 
-내 저장소에서 소재를 뽑고 지원할 직무를 공고에서 조사해, 자소서·이력서·포트폴리오의 **재료**를 파일로 쌓는 툴킷.
+내 저장소에서 소재를 뽑고 지원할 직무를 공고에서 조사해 자소서·이력서·포트폴리오의 **재료**를 파일로 쌓고, 그 직무에 맞춰 무엇을 만들지 정하는 툴킷.
 
 ## 무엇을 하는가
 
-자소서의 품질은 글솜씨가 아니라 **재료**에서 결정된다. 그래서 이 툴킷은 자소서를 써주지 않는다. 재료 둘을 파일로 쌓는다.
+자소서의 품질은 글솜씨가 아니라 **재료**에서 결정된다. 그래서 이 툴킷은 자소서를 써주지 않는다. 재료 둘을 파일로 쌓고, 그 위에서 만들 것 하나를 정한다.
 
 1. **뽑는다** — 내 저장소를 끝까지 읽고 소재가 될 가능성이 있는 모든 것을 근거(커밋·PR·이슈·경로)와 함께 적는다. 고르지 않고 순위를 매기지 않고, 실행 중 묻지 않는다
 2. **판다** — 지원할 직무의 공고 한 장에서 출발해 그 직무 주변을 조사하고, 문장마다 출처를 단다
+3. **정한다** — 조사한 직무의 공고 줄에 답하면서 나에게 녹고 만든 뒤에도 내가 쓸 만들 것을, 사용자와 이야기하며 점수·순위 없이 후보로 적는다
 
-재료에서 무엇을 고르고 어느 문서에 어떻게 쓸지는 이 툴킷 밖의 일이다.
+재료를 어느 문서에 어떻게 쓸지는 이 툴킷 밖의 일이다.
 
 ## 쓰는 법
 
@@ -37,6 +38,14 @@
 
 공고 한 장에서 깊게 판다. 공고의 줄마다 **실마리**(팀·제품·기술·사람의 이름과 공고가 답하지 않는 질문)를 뽑아 팀·리더·대표의 말·스택·제품을 파고, 공고만으로 안 풀리는 질문이 남을 때만 DART·전체 공고·뉴스로 뻗는다. **문장마다 출처를 달아** `career/companies/<slug>/roles/<role>/`에 쌓고, 사용자에 대해 판정하지 않는다("맞다/안 맞다"를 쓰지 않는다).
 
+조사한 직무에 무엇을 만들어 지원할지 고르려면:
+
+```
+/fit-portfolio <slug>/<role> 또는 회사명   공고 줄에 답하는, 내가 밖에서 만들 것을 이야기하며 정한다
+```
+
+먼저 셋을 묻고(손이 가는 것 · 이미 만들어 둔 것 · 걸린 줄), 공고의 줄마다 무늬 표를 대어 첫 수를 낸 뒤 반응대로 고치고 빼고 더한다. 후보마다 답하는 줄·나와의 연결·만든 뒤 어디에 쓰나·회사 쪽 근거·상태(`관심`·`보류`·`뺌`)가 붙고, 점수·순위는 없다. `career/applications/<slug>/<role>/`에 쌓이고 다시 돌리면 덧붙인다. 만드는 것은 다른 세션이다.
+
 ## 데이터
 
 데이터 디렉토리의 `career/`에 쌓인다. **툴킷 저장소에는 들어오지 않는다** — 개인 기록이라 배포 대상이 아니다.
@@ -44,7 +53,8 @@
 ```
 career/
 ├── repos/<slug>/{repo.md, candidates.md, artifacts/}      리포 재료 — extract-repo 가 만든다. 스크립트·gh 원자료는 artifacts/
-└── companies/<slug>/roles/<role>/{role.md, artifacts/}   직무 조사 — research-role 이 만든다. 공고 원문·에이전트 반환·DART 산출은 artifacts/
+├── companies/<slug>/roles/<role>/{role.md, artifacts/}   직무 조사 — research-role 이 만든다. 공고 원문·에이전트 반환·DART 산출은 artifacts/
+└── applications/<slug>/<role>/portfolio.md                만들 것 후보 — fit-portfolio 가 만든다. 줄 표와 후보, 상태 칸이 고른 기록
 cache/repos/<slug>/                                        원격 리포의 클론. 지워도 다시 받는다
 ```
 
@@ -64,6 +74,9 @@ cache/repos/<slug>/                                        원격 리포의 클�
 | `└ references/angles.md` | 뻗기 각도 일곱 — 각도별 절차, 명령 블록(DART 유무 확인·robots 판정·홈페이지 1회 fetch) |
 | `└ scripts/dart_fetch.py` `dart_extract.py` `dart_tables.py` | OpenDART 수집(키는 스크립트만 읽는다) · 사업보고서 원문 절 추출 · 직원·임원 표. 표준 라이브러리만 |
 | `└ scripts/test_extract.py` `test_fetch.py` | 파서 회귀(픽스처는 리포 밖, `ADD_COMPANY_FIXTURES`) · 수집기 합성 응답 테스트 |
+| `skills/fit-portfolio/` | 조사한 직무에 맞춰 만들 것을 사용자와 정한다 |
+| `└ references/patterns.md` | 공고 줄의 무늬 다섯과 첫 수, 성장 규칙 |
+| `└ references/portfolio.md` | `portfolio.md` 모양 — 줄 표·후보 칸 여덟·덧붙이기 |
 | `skills/career-setup/` | 데이터 디렉토리·키·로그인 상태를 준비한다 |
 | `└ references/layout.md` | 데이터 디렉토리의 자리 — `career/`·`cache/`·`.env`·`auth/`·`fixtures/`, 키 표, 로그인 상태 규약, GitHub 로그인 |
 | `└ scripts/browser.py` | `login`(창에서 로그인해 상태 저장) · `list` · `open`(그 상태로 페이지 하나 읽기). `uv run` |
@@ -76,7 +89,7 @@ cache/repos/<slug>/                                        원격 리포의 클�
 npx skills add uwonu606/career-prep
 ```
 
-어느 환경에서든 `skills/` 셋이 들어간다.
+어느 환경에서든 `skills/` 넷이 들어간다.
 
 처음 한 번 개인 데이터 디렉토리에서 `/career-setup`을 돈다 — `career/`·키(`.env`)·로그인 상태(`auth/`)가 거기 생기고 `gh` 로그인을 확인하며, 무엇이 어디에 있는지는 [`skills/career-setup/references/layout.md`](skills/career-setup/references/layout.md)가 정한다. 키와 로그인 상태의 내용은 스크립트만 읽는다(대화나 셸 명령에 나오지 않는다). OpenDART 키가 없으면 `research-role` 뻗기의 DART 행만 비고, `gh` 로그인이 없으면 `extract-repo`가 비공개 리포와 PR·이슈만 못 읽고 나머지는 그대로 돈다.
 
@@ -84,7 +97,7 @@ npx skills add uwonu606/career-prep
 
 기능은 계속 붙지만 아래는 고정이다. **새 기능이 이 중 하나를 어기면 그 기능이 잘못된 것이다.**
 
-1. 판정하지 않고 **격차를 서술**한다 — 재료에 점수·순위가 없고, 직무 파일에 "맞다/안 맞다"가 없다
+1. 판정하지 않고 **격차를 서술**한다 — 재료에 점수·순위가 없고, 직무 파일에 "맞다/안 맞다"가 없고, 만들 것 후보는 빈 칸으로 약한 자리를 보일 뿐 순위가 없다
 2. 재료마다 **저장소 안 근거**가 붙는다 — 커밋·PR·이슈·`경로:줄`. 직무 파일의 문장은 출처로 끝난다
-3. **해석이 들어가는 저장만 확인**을 거친다 — `research-role`의 "공고 밖에서 온 것". 재료 파일은 사실의 나열이라 확인 없이 저장한다
+3. **해석이 들어가는 저장만 확인**을 거친다 — `research-role`의 "공고 밖에서 온 것", `fit-portfolio`의 후보 전체. 재료 파일은 사실의 나열이라 확인 없이 저장한다
 4. 미완성을 **데이터로 남기고** 넘어간다 — `확인 필요`·`open_questions`
