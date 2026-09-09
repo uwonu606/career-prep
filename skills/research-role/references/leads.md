@@ -46,7 +46,7 @@ DART는 `add-company/scripts/`의 셋(`dart_fetch.py` → `dart_extract.py` → 
 
 묶음은 셋 — **팀·사람**(팀·사람·팀 질문), **제품·기술**(제품·기술), **회사**(회사 질문). 실마리가 없는 묶음은 띄우지 않는다. 뻗기는 조건표 행당 하나.
 
-넘기는 것: 그 묶음의 실마리(번호·종류·내용·온 줄) · 공고 구조화 전문 · 법인명·브랜드명·대표명 · 이 파일과 `add-company/references/catalog.md`의 절대 경로 · `artifacts/` 절대 경로 · 조사일 · 로그인해 둔 호스트 목록과 `career-setup/scripts/browser.py`의 절대 경로(데이터 디렉토리에서 실행한다). 뻗기에는 조건표의 행과 그 행을 연 실마리, 재사용할 회사 `artifacts/` 경로를 더한다.
+넘기는 것: 그 묶음의 실마리(번호·종류·내용·온 줄) · 공고 구조화 전문 · 법인명·브랜드명·대표명 · 이 파일과 `add-company/references/catalog.md`의 절대 경로 · `artifacts/` 절대 경로 · 조사일 · 로그인해 둔 호스트 목록과 `career-setup/scripts/browser.py`의 절대 경로 — 호출 문장을 그대로 넘긴다: `cd <데이터 디렉토리> && uv run <절대 경로>/browser.py open "<url>"`. **`python3`로 부르면 안 된다** — 스크립트는 PEP 723 머리에서 `playwright`를 스스로 받으므로 `uv run`이어야 하고, `python3`는 `ModuleNotFoundError`로 죽는다(2026-09-09 에이피알 조사에서 실제로 링크드인 열기가 이렇게 한 번 실패했다 ①). 뻗기에는 조건표의 행과 그 행을 연 실마리, 재사용할 회사 `artifacts/` 경로를 더한다.
 
 에이전트가 하는 것: 실마리마다 #1의 자리를 찾아 닿은 문장을 **인용**으로 옮기고 출처를 단다. 해석은 메인의 일이다. 직접 접근은 `add-company/references/catalog.md` #0의 등급 A와 사용자가 준 URL·검색 결과 링크(1건씩)만, 판정을 본 뒤에. 로그인 뒤의 페이지는 호스트가 목록에 있을 때만 `browser.py open` 1건이고, 출처 뒤에 `규칙 예외(auth)`를 적는다(catalog #8). git 명령을 쓰지 않고, 파일은 `artifacts/dart/` 산출만 만든다.
 
