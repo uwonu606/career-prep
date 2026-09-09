@@ -2,7 +2,7 @@
 
 `career/companies/<slug>/roles/<role>/` 아래 `role.md`와 `artifacts/`(`posting.md`·`findings-*.md`·`dart/`, 원문 그대로). 직무는 회사 아래의 단위다 — 같은 회사에 백엔드 신입·경력이 각각 파일을 갖는다. 모르는 값은 `~`, 닿지 않은 것은 `open_questions`, 문장마다 출처 — 비워 두는 것이 지어내는 것보다 항상 낫다.
 
-`<slug>`는 영문 kebab이고 그것이 곧 참조 id다. **법인명의 영문 표기를 우선한다** — 회사 홈페이지·공고의 영문 사명이나 DART `company.json`의 `corp_name_eng`가 있으면 거기서(`Kakao Corp.` → `kakao`, `Viva Republica Inc.` → `viva-republica`), 없으면 통용 영문명(`woowa-brothers`). 브랜드명(`toss`, `baemin`)은 slug가 아니다.
+`<slug>`는 **법인명의 영문 표기** kebab이고 그것이 곧 참조 id다 — 회사 홈페이지·공고의 영문 사명이나 DART `company.json`의 `corp_name_eng`에서(`Kakao Corp.` → `kakao`, `Viva Republica Inc.` → `viva-republica`), 없으면 통용 영문명(`woowa-brothers`). 브랜드명(`toss`, `baemin`)은 slug가 아니다.
 
 아래는 모양이다 — `<…>`는 자리표시이고 어느 값도 조사값이 아니다.
 
@@ -12,7 +12,7 @@ id: <role>
 company: <slug>
 title: "<공고 제목 원문>"
 job_url: https://<공고 URL>
-date: 2026-09-09
+date: <조사일>
 open_questions:                             # 닿지 않은 실마리. 상세는 본문의 그 실마리 줄
   - L7 <실마리>
 ---
@@ -54,4 +54,4 @@ open_questions:                             # 닿지 않은 실마리. 상세는
 
 - **인용이 단위다.** 공고 항목과 회사 사람의 말은 원문 그대로 옮긴다. 요약하면 회사 말이 내 말이 된다.
 - **상태는 실마리 줄에만 있다.** 닿은 것·못 찾은 것·뻗은 것이 그 실마리의 한 줄에 온다. 숫자는 원값 그대로, 계산한 값은 두 원값과 함께.
-- **판정은 없다.** "맞다/안 맞다"·"이 요건은 갖췄다"는 이 파일에 오지 않는다. 공고가 바뀌어 다시 조사하면 같은 파일에서 `date`를 바꾸고 달라진 줄을 "2026-03 <원문> → 2026-09 <원문>"으로 적는다.
+- **회사가 이 직무에 대해 말한 것만 적는다.** 사용자와의 비교는 이 파일 밖의 일이다. 공고가 바뀌어 다시 조사하면 같은 파일에서 `date`를 바꾸고 달라진 줄을 "<이전 날짜> <원문> → <이번 날짜> <원문>"으로 적는다.
