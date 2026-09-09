@@ -19,6 +19,12 @@
 
 ## 쓰는 법
 
+처음 한 번, 개인 데이터를 둘 디렉토리에서 — 스킬은 전부 그 디렉토리에서 실행한다:
+
+```
+/career-setup                   career/·키(.env)·로그인 상태(auth/)를 만든다
+```
+
 ```
 /add-note                일기 한 줄을 붙인다. 매일이든 심심할 때든
 /add-experience          경험 하나를 캐내 기록한다
@@ -105,6 +111,9 @@ career/
 | `skills/research-role/` | 직무 하나를 공고에서 출발해 조사한다 |
 | `└ references/leads.md` | 실마리 여섯 종류와 정체가 드러나는 자리, 질문 실마리의 네 무늬, 뻗는 조건 다섯, 에이전트에 넘기는 것과 반환 형식 |
 | `└ references/role.md` | 직무 파일 모양 — 공고와 실마리 / 실마리가 닿은 것 / 공고 밖에서 온 것, 실마리 줄이 곧 상태 |
+| `skills/career-setup/` | 데이터 디렉토리·키·로그인 상태를 준비한다 |
+| `└ references/layout.md` | 데이터 디렉토리의 자리 — `career/`·`.env`·`auth/`·`fixtures/`, 키 표, 로그인 상태 규약 |
+| `└ scripts/browser.py` | `login`(창에서 로그인해 상태 저장) · `list` · `open`(그 상태로 페이지 하나 읽기). `uv run` |
 | `docs/rationale.md` | 설계 근거 — 뒤집기 전에 읽을 것 |
 | `docs/market-research.md` | 채용 프로세스 모델의 근거와 출처 |
 | `docs/company-research.md` | 회사 조사 소스·파서 실측 — robots·약관 판정, 사업보고서 XML 구조, 첫 수정 루프 |
@@ -118,9 +127,9 @@ career/
 npx skills add uwonu606/career-prep
 ```
 
-Claude Code에서는 플러그인으로 설치하면 `agents/tech-interviewer.md`까지 함께 들어간다. 그 밖의 환경에서는 `skills/` 여섯만 들어가고, 검증은 새 대화로 격리한다.
+Claude Code에서는 플러그인으로 설치하면 `agents/tech-interviewer.md`까지 함께 들어간다. 그 밖의 환경에서는 `skills/` 일곱만 들어가고, 검증은 새 대화로 격리한다.
 
-`add-company`의 DART 각도(공시 문서·직원 현황·임원)는 OpenDART 인증키가 있을 때 돈다 — 개인용 즉시 발급, 무료. 작업 디렉토리의 `.env`에 `DART_API_KEY=…` 한 줄로 두면 스크립트만 그것을 읽는다(대화나 셸 명령에 키가 나오지 않는다). 키가 없어도 나머지 15각도는 그대로 돈다.
+처음 한 번 개인 데이터 디렉토리에서 `/career-setup`을 돈다 — `career/`·키(`.env`)·로그인 상태(`auth/`)가 거기 생기고, 무엇이 어디에 있는지는 [`skills/career-setup/references/layout.md`](skills/career-setup/references/layout.md)가 정한다. 키와 로그인 상태의 내용은 스크립트만 읽는다(대화나 셸 명령에 나오지 않는다). OpenDART 키가 없으면 `add-company`의 DART 세 각도만 비고 나머지 15각도는 그대로 돈다.
 
 ## 아직 없는 것
 
